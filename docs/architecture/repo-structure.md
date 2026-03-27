@@ -4,38 +4,39 @@ This repo is being built as a monorepo with clear boundaries from day one.
 
 ## Top level directories
 
-### apps
+### `apps`
 
-This directory will hold runtime applications.
+This directory holds runtime applications.
 
-Planned contents:
+Current contents:
 
-- apps/web
-- apps/worker
+- `apps/web`
+- `apps/worker`
 
-Nothing outside runtime applications belongs here.
+The web app owns public and admin route surfaces.
+The worker owns background runtime behavior and future jobs.
 
-### packages
+### `packages`
 
 This directory will hold reusable or isolated workspaces.
 
 Planned contents:
 
-- packages/contracts
+- `packages/contracts`
 
 Contracts stay isolated from the web app and worker.
 
-### infra
+### `infra`
 
 This directory will hold infrastructure that is not an application package.
 
 Planned contents:
 
-- infra/supabase
+- `infra/supabase`
 
 SQL migrations, database configuration, and infrastructure specific assets belong here.
 
-### tooling
+### `tooling`
 
 This directory holds shared repo configuration.
 
@@ -46,7 +47,7 @@ Current contents:
 
 Application code does not belong here.
 
-### docs
+### `docs`
 
 This directory holds architecture notes, phase tracking, and runbooks.
 
@@ -56,9 +57,52 @@ Current contents:
 - phase documentation
 - local setup runbook
 
-### .github
+### `.github`
 
 This directory holds CI workflow definitions.
+
+## Workspace boundaries
+
+### `apps/web`
+
+This workspace owns:
+
+- App Router routes
+- layouts
+- shared web components
+- web only route constants and metadata
+- future auth, admin, and public launch UX
+
+It does not own:
+
+- Solidity contracts
+- SQL migrations
+- worker jobs
+
+### `apps/worker`
+
+This workspace owns:
+
+- worker bootstrapping
+- runtime lifecycle
+- worker side environment parsing
+- future background jobs and operational processors
+
+It does not own:
+
+- web routing
+- React UI
+- contract source code
+
+### `packages/contracts`
+
+This workspace is reserved for:
+
+- Solidity contracts
+- contract tests
+- deployment and verification scripts
+
+It does not belong inside the web app.
 
 ## Boundary rules
 

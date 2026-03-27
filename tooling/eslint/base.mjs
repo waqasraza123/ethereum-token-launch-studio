@@ -10,6 +10,9 @@ const baseConfig = [
       "**/coverage/**",
       "**/dist/**",
       "**/node_modules/**",
+      "apps/**",
+      "packages/**",
+      "infra/**",
     ],
   },
   {

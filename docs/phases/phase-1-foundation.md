@@ -2,9 +2,9 @@
 
 ## Goal
 
-Create the clean monorepo root for a production grade Ethereum Token Launch Studio build.
+Create the clean monorepo root and runtime shells for a production grade Ethereum Token Launch Studio build.
 
-## What this commit establishes
+## What this phase now establishes
 
 - root package metadata
 - pnpm workspace registration
@@ -17,32 +17,41 @@ Create the clean monorepo root for a production grade Ethereum Token Launch Stud
 - root documentation
 - foundation verification scripts
 - foundation smoke tests
+- a bootable Next.js web shell
+- a bootable Node worker shell
 
 ## What is intentionally deferred
 
-- apps/web
-- apps/worker
-- packages/contracts
-- infra/supabase
+- `packages/contracts`
+- `infra/supabase`
 - auth
 - product schema
 - blockchain integration
-- runtime build scripts for app packages
+- protected admin behavior
+- wallet integration
+- runtime product modules
 
-## Acceptance criteria for this commit
+## Acceptance criteria for this phase state
 
 - dependencies install cleanly
 - formatting checks pass
 - root lint passes
-- shared TypeScript config resolves cleanly
+- web lint passes
+- worker lint passes
+- web typecheck passes
+- worker typecheck passes
 - foundation tests pass
-- foundation validation script passes
-- CI workflow mirrors the local foundation checks
+- workspace validation script passes
+- web build passes
+- worker build passes
+- `pnpm dev:web` boots the web shell
+- `pnpm dev:worker` boots the worker shell
+- CI mirrors the local checks
 
 ## Risks that remain
 
-- runtime apps do not exist yet
 - no contracts package exists yet
 - no database infrastructure exists yet
 - no auth or product data model exists yet
 - no chain integration exists yet
+- no protected routes exist yet

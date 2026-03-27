@@ -22,11 +22,37 @@ const requiredPaths = [
   "docs/architecture/repo-structure.md",
   "docs/phases/phase-1-foundation.md",
   "docs/runbooks/local-setup.md",
-  "scripts/verify-workspace-foundation.mjs",
   "scripts/workspace-foundation.test.mjs",
+  "apps/web/package.json",
+  "apps/web/tsconfig.json",
+  "apps/web/next-env.d.ts",
+  "apps/web/next.config.ts",
+  "apps/web/eslint.config.mjs",
+  "apps/web/src/app/globals.css",
+  "apps/web/src/app/layout.tsx",
+  "apps/web/src/app/(marketing)/page.tsx",
+  "apps/web/src/app/(auth)/sign-in/page.tsx",
+  "apps/web/src/app/(admin)/dashboard/page.tsx",
+  "apps/web/src/components/foundation/app-header.tsx",
+  "apps/web/src/components/foundation/page-shell.tsx",
+  "apps/web/src/components/foundation/placeholder-panel.tsx",
+  "apps/web/src/lib/branding/site-metadata.ts",
+  "apps/web/src/lib/routing/route-paths.ts",
+  "apps/web/src/lib/routing/route-paths.test.ts",
+  "apps/worker/package.json",
+  "apps/worker/tsconfig.json",
+  "apps/worker/eslint.config.mjs",
+  "apps/worker/src/index.ts",
+  "apps/worker/src/bootstrap/start-worker.ts",
+  "apps/worker/src/config/env.ts",
+  "apps/worker/src/config/env.test.ts",
+  "apps/worker/src/core/worker-runtime.ts",
 ];
 
-const requiredScripts = [
+const requiredRootScripts = [
+  "build",
+  "dev:web",
+  "dev:worker",
   "format",
   "format:check",
   "lint",
@@ -36,6 +62,21 @@ const requiredScripts = [
 ];
 
 const requiredWorkspaceGlobs = ["apps/*", "packages/*"];
+
+const requiredTurboTasks = ["build", "dev", "lint", "typecheck", "test"];
+
+const requiredPackageDefinitions = [
+  {
+    path: "apps/web/package.json",
+    name: "@token-launch-studio/web",
+    scripts: ["build", "dev", "lint", "test", "typecheck"],
+  },
+  {
+    path: "apps/worker/package.json",
+    name: "@token-launch-studio/worker",
+    scripts: ["build", "dev", "lint", "test", "typecheck"],
+  },
+];
 
 const ensurePathExists = async (relativePath) => {
   await access(resolve(relativePath), constants.F_OK);
@@ -62,11 +103,13 @@ const main = async () => {
     throw new Error("package.json must lock pnpm via packageManager.");
   }
 
-  const packageScripts = packageJson.scripts ?? {};
-  const missingScripts = requiredScripts.filter((scriptName) => !(scriptName in packageScripts));
+  const rootScripts = packageJson.scripts ?? {};
+  const missingRootScripts = requiredRootScripts.filter(
+    (scriptName) => !(scriptName in rootScripts),
+  );
 
-  if (missingScripts.length > 0) {
-    throw new Error(`package.json is missing required scripts: ${missingScripts.join(", ")}`);
+  if (missingRootScripts.length > 0) {
+    throw new Error(`package.json is missing required scripts: ${missingRootScripts.join(", ")}`);
   }
 
   const workspaceFileContent = await readFile(resolve("pnpm-workspace.yaml"), "utf8");
@@ -82,12 +125,29 @@ const main = async () => {
 
   const turboConfig = await readJsonFile("turbo.json");
   const turboTasks = turboConfig.tasks ?? {};
-  const missingTurboTasks = ["build", "lint", "typecheck", "test"].filter(
-    (taskName) => !(taskName in turboTasks),
-  );
+  const missingTurboTasks = requiredTurboTasks.filter((taskName) => !(taskName in turboTasks));
 
   if (missingTurboTasks.length > 0) {
     throw new Error(`turbo.json is missing required tasks: ${missingTurboTasks.join(", ")}`);
+  }
+
+  for (const definition of requiredPackageDefinitions) {
+    const workspacePackageJson = await readJsonFile(definition.path);
+
+    if (workspacePackageJson.name !== definition.name) {
+      throw new Error(`${definition.path} must have package name ${definition.name}.`);
+    }
+
+    const workspaceScripts = workspacePackageJson.scripts ?? {};
+    const missingWorkspaceScripts = definition.scripts.filter(
+      (scriptName) => !(scriptName in workspaceScripts),
+    );
+
+    if (missingWorkspaceScripts.length > 0) {
+      throw new Error(
+        `${definition.path} is missing required scripts: ${missingWorkspaceScripts.join(", ")}`,
+      );
+    }
   }
 
   console.log("Workspace foundation validation passed.");

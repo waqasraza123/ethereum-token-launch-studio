@@ -37,8 +37,11 @@ jobs:
       - name: Validate TypeScript config
         run: pnpm typecheck
 
-      - name: Run foundation tests
+      - name: Run tests
         run: pnpm test
+
+      - name: Build runtime packages
+        run: pnpm build
 
       - name: Validate workspace foundation
         run: pnpm validate:foundation
