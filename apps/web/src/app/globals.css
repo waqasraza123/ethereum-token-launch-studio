@@ -35,6 +35,12 @@ a {
   text-decoration: none;
 }
 
+button,
+input,
+textarea {
+  font: inherit;
+}
+
 .app-root {
   min-height: 100vh;
   display: flex;
@@ -162,6 +168,7 @@ a {
   background: rgba(14, 165, 233, 0.16);
   color: #f8fafc;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .button-link.secondary {
@@ -219,6 +226,96 @@ a {
   flex: 0 0 auto;
   border-radius: 999px;
   background: linear-gradient(135deg, #38bdf8, #22c55e);
+}
+
+.form-card {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.field-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.field-label {
+  display: grid;
+  gap: 0.4rem;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.field-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.text-input {
+  min-height: 2.9rem;
+  width: 100%;
+  border-radius: 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.7);
+  color: #f8fafc;
+  padding: 0 0.95rem;
+  outline: none;
+}
+
+.text-input:focus {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+}
+
+.status-banner {
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.status-banner.error {
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(127, 29, 29, 0.28);
+  color: #fecaca;
+}
+
+.status-banner.success {
+  border: 1px solid rgba(74, 222, 128, 0.24);
+  background: rgba(20, 83, 45, 0.24);
+  color: #bbf7d0;
+}
+
+.dashboard-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.dashboard-list-item {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 6, 23, 0.6);
+  padding: 1rem;
+}
+
+.dashboard-list-title {
+  margin: 0;
+  font-size: 1rem;
+  color: #f8fafc;
+}
+
+.dashboard-list-meta {
+  margin: 0.35rem 0 0;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+.inline-form {
+  margin: 0;
 }
 
 @media (max-width: 720px) {

@@ -1,35 +1,27 @@
 import { closeSupabaseReplayDatabase, replaySupabaseMigrations } from "./lib/supabase-replay.mjs";
 
-const replayFixtureSql = `
+const authFixtureSql = `
 insert into auth.users (id)
 values ('00000000-0000-0000-0000-000000000001');
+`;
 
-insert into app_public.workspaces (id, slug, name)
-values ('10000000-0000-0000-0000-000000000001', 'studio-foundation', 'Studio Foundation');
-
-insert into app_public.workspace_members (id, workspace_id, auth_user_id, role)
-values (
+const bootstrapWorkspaceSql = `
+select *
+from app_public.bootstrap_workspace(
+  '10000000-0000-0000-0000-000000000001',
+  'studio-foundation',
+  'Studio Foundation',
   '20000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000001',
-  'owner'
-);
-
-insert into app_public.projects (id, workspace_id, slug, name, description)
-values (
-  '30000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001',
-  'token-launch-studio',
-  'Token Launch Studio',
-  'Replay validation fixture'
+  '00000000-0000-0000-0000-000000000001'
 );
 `;
 
 const { database, manifest } = await replaySupabaseMigrations();
 
 try {
-  await database.exec(replayFixtureSql);
+  await database.exec(authFixtureSql);
 
+  const bootstrapResult = await database.query(bootstrapWorkspaceSql);
   const countsResult = await database.query(`
     select
       (select count(*)::int from app_public.workspaces) as workspace_count,
@@ -37,7 +29,7 @@ try {
       (select count(*)::int from app_public.projects) as project_count
   `);
 
-  const triggerResult = await database.query(`
+  const triggersResult = await database.query(`
     select event_object_table
     from information_schema.triggers
     where event_object_schema = 'app_public'
@@ -50,9 +42,10 @@ try {
   `);
 
   console.info("supabase.migrations.replay_valid", {
+    bootstrap: bootstrapResult.rows[0],
     counts: countsResult.rows[0],
     latestMigration: manifest.at(-1)?.filename ?? null,
-    triggers: triggerResult.rows.map((row) => row.event_object_table),
+    triggers: triggersResult.rows.map((row) => row.event_object_table),
   });
 } finally {
   await closeSupabaseReplayDatabase(database);

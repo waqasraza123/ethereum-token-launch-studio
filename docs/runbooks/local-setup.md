@@ -9,6 +9,16 @@
 
     pnpm install
 
+## Configure auth environment
+
+Copy `.env.example` into your local env file and provide real Supabase values for:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+The authenticated dashboard flow remains unproven until those values exist and your Supabase project contains at least one email/password auth user.
+
 ## Run the web shell
 
     pnpm dev:web
@@ -31,12 +41,6 @@ The worker should log a `worker.shell.ready` message and stay alive until you st
     pnpm contracts:test
     pnpm --filter @token-launch-studio/contracts accounts
 
-The contracts workspace should:
-
-- compile cleanly
-- run the sentinel contract test suite
-- print local simulated signer addresses
-
 ## Run the database proof commands
 
     pnpm db:list
@@ -48,30 +52,17 @@ The database boundary should:
 - list the migration files in sequence order
 - validate migration naming, ordering, and non-empty content
 - replay all migrations from zero into an embedded database
-- prove the core workspaces, members, and projects schema exists
+- prove the workspace bootstrap function exists and works
 
-## Targeted verification
+## Run the web auth/data proof commands
 
-    pnpm db:list
-    pnpm db:validate
-    pnpm db:replay:check
-    pnpm validate:foundation
-
-## Full repo verification
-
-    pnpm format:check
-    pnpm lint
-    pnpm typecheck
-    pnpm test
-    pnpm contracts:compile
-    pnpm contracts:test
-    pnpm db:validate
-    pnpm db:replay:check
-    pnpm build
-    pnpm validate:foundation
+    pnpm --filter @token-launch-studio/web lint
+    pnpm --filter @token-launch-studio/web typecheck
+    pnpm --filter @token-launch-studio/web test
+    pnpm --filter @token-launch-studio/web build
 
 ## Current status
 
-This repo now proves root tooling, web, worker, contracts, and replayable database schema scaffolding.
+This repo now proves root tooling, web, worker, contracts, replayable database schema, and the first server-side auth/data spine.
 
-Auth wiring, protected admin behavior, and product-specific blockchain workflows are intentionally deferred to later commits.
+Real sign-in and dashboard membership reads still depend on valid runtime Supabase environment values.

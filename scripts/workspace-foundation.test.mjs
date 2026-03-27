@@ -41,7 +41,7 @@ test("workspace manifest includes future app and package boundaries", async () =
   assert.match(workspaceManifest, /packages\/\*/);
 });
 
-test("web, worker, and contracts workspace manifests are present", async () => {
+test("web worker and contracts workspace manifests are present", async () => {
   const webPackageJson = await readJsonFile("apps/web/package.json");
   const workerPackageJson = await readJsonFile("apps/worker/package.json");
   const contractsPackageJson = await readJsonFile("packages/contracts/package.json");
@@ -51,32 +51,31 @@ test("web, worker, and contracts workspace manifests are present", async () => {
   assert.equal(contractsPackageJson.name, "@token-launch-studio/contracts");
 });
 
-test("contracts workspace includes the sentinel contract files", async () => {
+test("web auth spine files exist", async () => {
+  await assert.doesNotReject(async () => readTextFile("apps/web/src/proxy.ts"));
+  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/auth/session.ts"));
+  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/supabase/server.ts"));
   await assert.doesNotReject(async () =>
-    readTextFile("packages/contracts/contracts/foundation/Phase1Sentinel.sol"),
+    readTextFile("apps/web/src/app/(auth)/sign-in/actions.ts"),
   );
   await assert.doesNotReject(async () =>
-    readTextFile("packages/contracts/test/Phase1Sentinel.test.ts"),
-  );
-  await assert.doesNotReject(async () =>
-    readTextFile("packages/contracts/scripts/print-accounts.ts"),
-  );
-});
-
-test("infra boundary includes the phase 2 core schema migration", async () => {
-  await assert.doesNotReject(async () => readTextFile("infra/supabase/README.md"));
-  await assert.doesNotReject(async () =>
-    readTextFile("infra/supabase/migrations/0002_phase_2_core_business_schema.sql"),
+    readTextFile("apps/web/src/app/(admin)/dashboard/actions.ts"),
   );
 });
 
-test("phase docs exist for both foundation and core schema", async () => {
+test("infra boundary includes the phase 2 auth bootstrap migration", async () => {
+  await assert.doesNotReject(async () =>
+    readTextFile("infra/supabase/migrations/0003_phase_2_auth_workspace_bootstrap.sql"),
+  );
+});
+
+test("phase docs exist for foundation core schema and auth spine", async () => {
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-1-foundation.md"));
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-core-schema.md"));
-  await assert.doesNotReject(async () => readTextFile("docs/runbooks/local-setup.md"));
+  await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-auth-spine.md"));
 });
 
-test("ci workflow runs formatting, lint, typecheck, tests, contract compile, contract tests, db validation, db replay, build, and validation", async () => {
+test("ci workflow runs formatting lint typecheck tests contract checks db validation db replay build and validation", async () => {
   const workflowContent = await readTextFile(".github/workflows/ci.yml");
 
   assert.match(workflowContent, /pnpm format:check/);

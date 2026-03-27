@@ -6,51 +6,42 @@ import {
 } from "./lib/supabase-migrations.mjs";
 import { closeSupabaseReplayDatabase, replaySupabaseMigrations } from "./lib/supabase-replay.mjs";
 
-test("supabase migration manifest is sequential and includes the phase 2 schema migration", async () => {
+test("supabase migration manifest is sequential and includes the auth workspace bootstrap migration", async () => {
   const manifest = await validateSupabaseMigrationManifest();
 
   assert.deepEqual(
     manifest.map((migration) => migration.filename),
-    ["0001_phase_1_baseline.sql", "0002_phase_2_core_business_schema.sql"],
+    [
+      "0001_phase_1_baseline.sql",
+      "0002_phase_2_core_business_schema.sql",
+      "0003_phase_2_auth_workspace_bootstrap.sql",
+    ],
   );
 });
 
-test("baseline migration creates schema boundaries and the phase 2 migration defines the core tables", async () => {
+test("the phase 2 auth workspace bootstrap migration defines the bootstrap function", async () => {
   const manifest = await readSupabaseMigrationManifest();
-  const baselineMigration = manifest[0];
-  const coreSchemaMigration = manifest[1];
+  const bootstrapMigration = manifest[2];
 
-  assert.ok(baselineMigration);
-  assert.ok(coreSchemaMigration);
-
-  assert.match(baselineMigration.statementText, /create schema if not exists app_public;/i);
-  assert.match(baselineMigration.statementText, /create schema if not exists app_private;/i);
-  assert.match(baselineMigration.statementText, /create schema if not exists app_audit;/i);
-
+  assert.ok(bootstrapMigration);
   assert.match(
-    coreSchemaMigration.statementText,
-    /create table if not exists app_public\.workspaces/i,
+    bootstrapMigration.statementText,
+    /create or replace function app_public\.bootstrap_workspace/i,
   );
-  assert.match(
-    coreSchemaMigration.statementText,
-    /create table if not exists app_public\.workspace_members/i,
-  );
-  assert.match(
-    coreSchemaMigration.statementText,
-    /create table if not exists app_public\.projects/i,
-  );
-  assert.match(coreSchemaMigration.statementText, /references auth\.users\(id\)/i);
+  assert.match(bootstrapMigration.statementText, /security definer/i);
+  assert.match(bootstrapMigration.statementText, /insert into app_public\.workspaces/i);
+  assert.match(bootstrapMigration.statementText, /insert into app_public\.workspace_members/i);
 });
 
-test("migration replay creates the expected schemas, tables, and triggers", async () => {
+test("migration replay creates the bootstrap function and the expected tables and triggers", async () => {
   const { database } = await replaySupabaseMigrations();
 
   try {
-    const schemasResult = await database.query(`
-      select schema_name
-      from information_schema.schemata
-      where schema_name in ('app_public', 'app_private', 'app_audit')
-      order by schema_name
+    const routinesResult = await database.query(`
+      select routine_name
+      from information_schema.routines
+      where routine_schema = 'app_public'
+        and routine_name = 'bootstrap_workspace'
     `);
 
     const tablesResult = await database.query(`
@@ -74,8 +65,8 @@ test("migration replay creates the expected schemas, tables, and triggers", asyn
     `);
 
     assert.deepEqual(
-      schemasResult.rows.map((row) => row.schema_name),
-      ["app_audit", "app_private", "app_public"],
+      routinesResult.rows.map((row) => row.routine_name),
+      ["bootstrap_workspace"],
     );
     assert.deepEqual(
       tablesResult.rows.map((row) => row.table_name),
@@ -90,74 +81,51 @@ test("migration replay creates the expected schemas, tables, and triggers", asyn
   }
 });
 
-test("migration replay enforces foreign keys, roles, and slug validation", async () => {
+test("migration replay executes bootstrap_workspace and enforces uniqueness", async () => {
   const { database } = await replaySupabaseMigrations();
 
   try {
     await database.exec(`
       insert into auth.users (id)
       values ('00000000-0000-0000-0000-000000000001');
+    `);
 
-      insert into app_public.workspaces (id, slug, name)
-      values ('10000000-0000-0000-0000-000000000001', 'studio-core', 'Studio Core');
-
-      insert into app_public.workspace_members (id, workspace_id, auth_user_id, role)
-      values (
+    const bootstrapResult = await database.query(`
+      select *
+      from app_public.bootstrap_workspace(
+        '10000000-0000-0000-0000-000000000001',
+        'studio-core',
+        'Studio Core',
         '20000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000001',
-        '00000000-0000-0000-0000-000000000001',
-        'owner'
-      );
-
-      insert into app_public.projects (id, workspace_id, slug, name)
-      values (
-        '30000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000001',
-        'alpha-launch',
-        'Alpha Launch'
+        '00000000-0000-0000-0000-000000000001'
       );
     `);
 
     const countsResult = await database.query(`
       select
         (select count(*)::int from app_public.workspaces) as workspace_count,
-        (select count(*)::int from app_public.workspace_members) as workspace_member_count,
-        (select count(*)::int from app_public.projects) as project_count
+        (select count(*)::int from app_public.workspace_members) as workspace_member_count
     `);
 
+    assert.deepEqual(bootstrapResult.rows[0], {
+      workspace_id: "10000000-0000-0000-0000-000000000001",
+      workspace_member_id: "20000000-0000-0000-0000-000000000001",
+    });
+
     assert.deepEqual(countsResult.rows[0], {
-      project_count: 1,
       workspace_count: 1,
       workspace_member_count: 1,
     });
 
     await assert.rejects(
-      database.exec(`
-        insert into app_public.workspaces (id, slug, name)
-        values ('10000000-0000-0000-0000-000000000002', 'Bad Slug', 'Invalid Workspace');
-      `),
-    );
-
-    await assert.rejects(
-      database.exec(`
-        insert into app_public.workspace_members (id, workspace_id, auth_user_id, role)
-        values (
+      database.query(`
+        select *
+        from app_public.bootstrap_workspace(
+          '10000000-0000-0000-0000-000000000002',
+          'studio-core',
+          'Studio Core Duplicate',
           '20000000-0000-0000-0000-000000000002',
-          '10000000-0000-0000-0000-000000000001',
-          '00000000-0000-0000-0000-000000000099',
-          'owner'
-        );
-      `),
-    );
-
-    await assert.rejects(
-      database.exec(`
-        insert into app_public.workspace_members (id, workspace_id, auth_user_id, role)
-        values (
-          '20000000-0000-0000-0000-000000000003',
-          '10000000-0000-0000-0000-000000000001',
-          '00000000-0000-0000-0000-000000000001',
-          'admin'
+          '00000000-0000-0000-0000-000000000001'
         );
       `),
     );

@@ -6,13 +6,16 @@
     "build": "next build",
     "dev": "next dev --turbopack",
     "lint": "eslint . --max-warnings=0",
-    "test": "tsx --test src/lib/routing/route-paths.test.ts",
+    "test": "node --import tsx --test src/lib/routing/route-paths.test.ts src/lib/env/public.test.ts src/lib/env/server.test.ts src/lib/workspaces/bootstrap-input.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/ssr": "0.9.0",
+    "@supabase/supabase-js": "2.100.1",
     "next": "16.2.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "25.5.0",

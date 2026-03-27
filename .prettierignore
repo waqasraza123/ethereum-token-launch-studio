@@ -1,1 +1,2 @@
 infra/supabase/migrations/0002_phase_2_core_business_schema.sql
+infra/supabase/migrations/0003_phase_2_auth_workspace_bootstrap.sql

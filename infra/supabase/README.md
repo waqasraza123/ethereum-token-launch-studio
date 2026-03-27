@@ -7,6 +7,7 @@ This directory exists to lock the database infrastructure boundary before app-si
 - `config.toml` for Supabase config scaffolding
 - `migrations/0001_phase_1_baseline.sql` for the minimal boundary setup
 - `migrations/0002_phase_2_core_business_schema.sql` for the first real business schema
+- `migrations/0003_phase_2_auth_workspace_bootstrap.sql` for the first authenticated bootstrap write
 
 ## Current migration scope
 
@@ -29,6 +30,14 @@ Creates the first business tables and database-side support behavior:
 - `updated_at` triggers on all three core tables
 - indexes and constraints for slugs, roles, and relationships
 
+### `0003_phase_2_auth_workspace_bootstrap.sql`
+
+Creates the first real auth-aware write function:
+
+- `app_public.bootstrap_workspace(...)`
+- atomic workspace plus owner-membership creation
+- a future-safe bootstrap path for the first admin flow
+
 ## Current proof commands
 
     pnpm db:list
@@ -38,10 +47,8 @@ Creates the first business tables and database-side support behavior:
 ## What is intentionally deferred
 
 - local Supabase runtime workflows
-- auth wiring
 - RLS policies
-- invitation flows
+- invitations
 - contract registry tables
 - activity tables
-- triggers or functions beyond shared timestamp handling
 - seed data
