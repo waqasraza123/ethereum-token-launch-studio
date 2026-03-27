@@ -49,6 +49,9 @@ jobs:
       - name: Validate migration manifest
         run: pnpm db:validate
 
+      - name: Replay migrations from zero
+        run: pnpm db:replay:check
+
       - name: Build runtime packages
         run: pnpm build
 

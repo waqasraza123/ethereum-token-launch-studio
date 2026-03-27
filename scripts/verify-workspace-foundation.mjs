@@ -22,12 +22,15 @@ const requiredPaths = [
   "tooling/typescript/node.json",
   "docs/architecture/repo-structure.md",
   "docs/phases/phase-1-foundation.md",
+  "docs/phases/phase-2-core-schema.md",
   "docs/runbooks/local-setup.md",
   "scripts/workspace-foundation.test.mjs",
   "scripts/supabase-migrations.test.mjs",
   "scripts/lib/supabase-migrations.mjs",
+  "scripts/lib/supabase-replay.mjs",
   "scripts/list-migrations.mjs",
   "scripts/validate-migrations.mjs",
+  "scripts/check-migration-replay.mjs",
   "apps/web/package.json",
   "apps/web/tsconfig.json",
   "apps/web/next-env.d.ts",
@@ -61,6 +64,7 @@ const requiredPaths = [
   "infra/supabase/README.md",
   "infra/supabase/config.toml",
   "infra/supabase/migrations/0001_phase_1_baseline.sql",
+  "infra/supabase/migrations/0002_phase_2_core_business_schema.sql",
 ];
 
 const requiredRootScripts = [
@@ -68,6 +72,7 @@ const requiredRootScripts = [
   "contracts:compile",
   "contracts:test",
   "db:list",
+  "db:replay:check",
   "db:validate",
   "dev:web",
   "dev:worker",

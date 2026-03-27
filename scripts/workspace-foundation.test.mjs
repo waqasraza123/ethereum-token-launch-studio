@@ -21,6 +21,7 @@ test("root package metadata is locked", async () => {
     "contracts:compile",
     "contracts:test",
     "db:list",
+    "db:replay:check",
     "db:validate",
     "dev:web",
     "dev:worker",
@@ -62,21 +63,20 @@ test("contracts workspace includes the sentinel contract files", async () => {
   );
 });
 
-test("infra boundary includes the baseline migration files", async () => {
+test("infra boundary includes the phase 2 core schema migration", async () => {
   await assert.doesNotReject(async () => readTextFile("infra/supabase/README.md"));
-  await assert.doesNotReject(async () => readTextFile("infra/supabase/config.toml"));
   await assert.doesNotReject(async () =>
-    readTextFile("infra/supabase/migrations/0001_phase_1_baseline.sql"),
+    readTextFile("infra/supabase/migrations/0002_phase_2_core_business_schema.sql"),
   );
 });
 
-test("core docs exist for repo structure, phase tracking, and local setup", async () => {
-  await assert.doesNotReject(async () => readTextFile("docs/architecture/repo-structure.md"));
+test("phase docs exist for both foundation and core schema", async () => {
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-1-foundation.md"));
+  await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-core-schema.md"));
   await assert.doesNotReject(async () => readTextFile("docs/runbooks/local-setup.md"));
 });
 
-test("ci workflow runs formatting, lint, typecheck, tests, contract compile, contract tests, migration validation, build, and validation", async () => {
+test("ci workflow runs formatting, lint, typecheck, tests, contract compile, contract tests, db validation, db replay, build, and validation", async () => {
   const workflowContent = await readTextFile(".github/workflows/ci.yml");
 
   assert.match(workflowContent, /pnpm format:check/);
@@ -86,6 +86,7 @@ test("ci workflow runs formatting, lint, typecheck, tests, contract compile, con
   assert.match(workflowContent, /pnpm contracts:compile/);
   assert.match(workflowContent, /pnpm contracts:test/);
   assert.match(workflowContent, /pnpm db:validate/);
+  assert.match(workflowContent, /pnpm db:replay:check/);
   assert.match(workflowContent, /pnpm build/);
   assert.match(workflowContent, /pnpm validate:foundation/);
 });

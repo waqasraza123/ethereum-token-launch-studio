@@ -10,13 +10,14 @@ This repo currently includes:
 - a bootable Next.js web shell
 - a bootable Node worker shell
 - a bootable Hardhat 3 contracts workspace
-- a bootable Supabase infra boundary with a minimal baseline migration
+- a bootable Supabase infra boundary with replayable migrations
+- a core Phase 2 business schema for workspaces, workspace members, and projects
 - shared TypeScript and ESLint tooling
 - phase and architecture docs
 
-This repo does not yet include real product contracts, database business tables, auth wiring, project data, or blockchain business logic.
+This repo does not yet include auth wiring, RLS policies, contract registry tables, token product logic, sale logic, or app-side blockchain integration.
 
-## Top level structure
+## Top-level structure
 
 - `apps/web` for the public and admin web surface
 - `apps/worker` for future background jobs and operational processing
@@ -56,10 +57,11 @@ This repo does not yet include real product contracts, database business tables,
     pnpm contracts:test
     pnpm --filter @token-launch-studio/contracts accounts
 
-## Migration verification
+## Database verification
 
     pnpm db:list
     pnpm db:validate
+    pnpm db:replay:check
 
 ## Full repo verification
 
@@ -70,15 +72,16 @@ This repo does not yet include real product contracts, database business tables,
     pnpm contracts:compile
     pnpm contracts:test
     pnpm db:validate
+    pnpm db:replay:check
     pnpm build
     pnpm validate:foundation
 
 ## What is intentionally deferred
 
-- real token contracts
 - Supabase auth wiring
-- product data model
-- blockchain business logic
+- RLS and policies
+- invitation flows
+- contract registry tables
 - wallet integration
 - protected admin behavior
-- local Supabase runtime workflows
+- token, sale, claim, and vesting product logic

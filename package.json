@@ -11,6 +11,7 @@
     "contracts:compile": "pnpm --filter @token-launch-studio/contracts compile",
     "contracts:test": "pnpm --filter @token-launch-studio/contracts test",
     "db:list": "node scripts/list-migrations.mjs",
+    "db:replay:check": "node scripts/check-migration-replay.mjs",
     "db:validate": "node scripts/validate-migrations.mjs",
     "dev:web": "turbo run dev --filter=@token-launch-studio/web",
     "dev:worker": "turbo run dev --filter=@token-launch-studio/worker",
@@ -22,6 +23,7 @@
     "validate:foundation": "node scripts/verify-workspace-foundation.mjs"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.4.1",
     "@eslint/js": "9.25.1",
     "@types/node": "25.5.0",
     "eslint": "9.25.1",

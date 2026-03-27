@@ -37,21 +37,24 @@ The contracts workspace should:
 - run the sentinel contract test suite
 - print local simulated signer addresses
 
-## Run the infra boundary proof commands
+## Run the database proof commands
 
     pnpm db:list
     pnpm db:validate
+    pnpm db:replay:check
 
-The infra boundary should:
+The database boundary should:
 
 - list the migration files in sequence order
 - validate migration naming, ordering, and non-empty content
-- keep the baseline migration non-product
+- replay all migrations from zero into an embedded database
+- prove the core workspaces, members, and projects schema exists
 
 ## Targeted verification
 
     pnpm db:list
     pnpm db:validate
+    pnpm db:replay:check
     pnpm validate:foundation
 
 ## Full repo verification
@@ -63,11 +66,12 @@ The infra boundary should:
     pnpm contracts:compile
     pnpm contracts:test
     pnpm db:validate
+    pnpm db:replay:check
     pnpm build
     pnpm validate:foundation
 
 ## Current status
 
-This phase now proves repo tooling plus web, worker, contracts, and infra boundary scaffolding only.
+This repo now proves root tooling, web, worker, contracts, and replayable database schema scaffolding.
 
-Business schema, auth, and blockchain product logic are intentionally deferred to later commits.
+Auth wiring, protected admin behavior, and product-specific blockchain workflows are intentionally deferred to later commits.

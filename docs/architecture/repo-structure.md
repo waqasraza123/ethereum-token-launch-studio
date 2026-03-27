@@ -2,7 +2,7 @@
 
 This repo is being built as a monorepo with clear boundaries from day one.
 
-## Top level directories
+## Top-level directories
 
 ### `apps`
 
@@ -34,7 +34,7 @@ Current contents:
 
 - `infra/supabase`
 
-Migration files, Supabase config scaffolding, and database infrastructure assets belong here.
+Migration files, Supabase config scaffolding, schema evolution, and migration replay validation belong here.
 
 ### `tooling`
 
@@ -117,8 +117,10 @@ This boundary owns:
 
 - migration files
 - migration manifest validation
+- migration replay validation
 - Supabase configuration scaffolding
-- future RLS, policies, functions, triggers, and schema evolution
+- schema evolution for business entities
+- future RLS, policies, functions, triggers, and database-side automation
 
 It does not own:
 
@@ -135,4 +137,4 @@ It does not own:
 - do not introduce Docker in the foundation phase
 - do not introduce product logic in root tooling files
 - do not introduce token, sale, claim, or vesting logic in the contracts workspace before the dedicated contract phases
-- do not introduce business tables into the baseline infra migration before Phase 2
+- do not introduce auth UI or route guards before the core business schema is proven
