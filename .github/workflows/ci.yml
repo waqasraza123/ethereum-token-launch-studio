@@ -46,6 +46,9 @@ jobs:
       - name: Run contract tests
         run: pnpm contracts:test
 
+      - name: Validate migration manifest
+        run: pnpm db:validate
+
       - name: Build runtime packages
         run: pnpm build
 

@@ -28,6 +28,9 @@ importers:
       prettier-plugin-solidity:
         specifier: 2.3.1
         version: 2.3.1(prettier@3.5.3)
+      prettier-plugin-sql:
+        specifier: 0.19.2
+        version: 0.19.2(prettier@3.5.3)
       turbo:
         specifier: 2.5.3
         version: 2.5.3
@@ -1516,6 +1519,12 @@ packages:
         integrity: sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw==,
       }
 
+  "@types/pegjs@0.10.6":
+    resolution:
+      {
+        integrity: sha512-eLYXDbZWXh2uxf+w8sXS8d6KSoXTswfps6fvCUuVAGN8eRpfe7h9eSRydxiSJvo9Bf+GzifsDOr9TMQlmJdmkw==,
+      }
+
   "@types/prettier@2.7.3":
     resolution:
       {
@@ -1999,6 +2008,13 @@ packages:
     engines: { node: ">=6.0.0" }
     hasBin: true
 
+  big-integer@1.6.52:
+    resolution:
+      {
+        integrity: sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==,
+      }
+    engines: { node: ">=0.6" }
+
   bn.js@4.12.3:
     resolution:
       {
@@ -2207,6 +2223,12 @@ packages:
       }
     engines: { node: ">=8.0.0" }
 
+  commander@2.20.3:
+    resolution:
+      {
+        integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==,
+      }
+
   concat-map@0.0.1:
     resolution:
       {
@@ -2336,6 +2358,12 @@ packages:
         integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==,
       }
     engines: { node: ">=0.3.1" }
+
+  discontinuous-range@1.0.0:
+    resolution:
+      {
+        integrity: sha512-c68LpLbO+7kP/b1Hr1qs8/BJ09F5khZGTxqxZuhzxpmwJKOgRFHJWIb9/KmqnqHhLdO55aOxFH/EGBvUQbL/RQ==,
+      }
 
   doctrine@2.1.0:
     resolution:
@@ -3397,6 +3425,13 @@ packages:
         integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==,
       }
 
+  jsox@1.2.125:
+    resolution:
+      {
+        integrity: sha512-HIf1uwublnXZsy7p3yHTrhzMzrLO6xKnqXytT9pEil5QxaXi8eyer7Is4luF5hYSV4kD3v03Y32FWoAeVYTghQ==,
+      }
+    hasBin: true
+
   jsx-ast-utils@3.3.5:
     resolution:
       {
@@ -3588,6 +3623,12 @@ packages:
     engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
     hasBin: true
 
+  moo@0.5.3:
+    resolution:
+      {
+        integrity: sha512-m2fmM2dDm7GZQsY7KK2cme8agi+AAljILjQnof7p1ZMDe6dQ4bdnSMx0cPppudoeNv5hEFQirN6u+O4fDE0IWA==,
+      }
+
   ms@2.1.3:
     resolution:
       {
@@ -3622,6 +3663,13 @@ packages:
         integrity: sha512-nGl7LRGrzugTtaFcJMhLbpzJM6XdivmbkdlaGcrk/LXg2KL/YBC6z1g70xh0/al+oFuVFP8N8kiWRucmeEH/qQ==,
       }
     engines: { node: ">=10" }
+    hasBin: true
+
+  nearley@2.20.1:
+    resolution:
+      {
+        integrity: sha512-+Mc8UaAebFzgV+KpI5n7DasuuQCHA89dmwm7JXw3TV43ukfNQ9DnBH3Mdb2g/I4Fdxc26pwimBWvjIw0UAILSQ==,
+      }
     hasBin: true
 
   next@16.2.1:
@@ -3660,6 +3708,13 @@ packages:
       {
         integrity: sha512-TdC8FSgHz8Mwtw9g5L4gR/Sh9XhSP/0DEkQxfEFXOpiul5IiHgHan2VhYYb6agDSfp4KuvltmGApc8HMgUrIkA==,
       }
+
+  node-sql-parser@5.4.0:
+    resolution:
+      {
+        integrity: sha512-jVe6Z61gPcPjCElPZ6j8llB3wnqGcuQzefim1ERsqIakxnEy5JlzV7XKdO1KmacRG5TKwPc4vJTgSRQ0LfkbFw==,
+      }
+    engines: { node: ">=8" }
 
   object-assign@4.1.1:
     resolution:
@@ -3855,6 +3910,15 @@ packages:
     peerDependencies:
       prettier: ">=3.0.0"
 
+  prettier-plugin-sql@0.19.2:
+    resolution:
+      {
+        integrity: sha512-DAu1Jcanpvs32OAOXsqaVXOpPs4nFLVkB3XwzRiZZVNL5/c+XdlNxWFMiMpMhYhmCG5BW3srK8mhikCOv5tPfg==,
+      }
+    engines: { node: ^14.18.0 || >=16.0.0 }
+    peerDependencies:
+      prettier: ^3.0.3
+
   prettier@2.8.8:
     resolution:
       {
@@ -3896,6 +3960,19 @@ packages:
       {
         integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==,
       }
+
+  railroad-diagrams@1.0.0:
+    resolution:
+      {
+        integrity: sha512-cz93DjNeLY0idrCNOH6PviZGRN9GJhsdm9hpn1YCS879fj4W+x5IFJhhkRZcwVgMmFF7R82UA/7Oh+R8lLZg6A==,
+      }
+
+  randexp@0.4.6:
+    resolution:
+      {
+        integrity: sha512-80WNmd9DA0tmZrw9qQa62GPPWfuXJknrmVmLcxvq4uZBdYqb1wYoKTmnlGUchvVWe0XiLupYkBoXVOxz3C8DYQ==,
+      }
+    engines: { node: ">=0.12" }
 
   randombytes@2.1.0:
     resolution:
@@ -4001,6 +4078,13 @@ packages:
       }
     engines: { node: ">= 0.4" }
     hasBin: true
+
+  ret@0.1.15:
+    resolution:
+      {
+        integrity: sha512-TTlYpa+OL+vMMNG24xSlQGEJ3B/RzEfUlLct7b5G/ytav+wPrplCpVMFuwzXbkecJrb6IYo1iFb0S9v37754mg==,
+      }
+    engines: { node: ">=0.12" }
 
   reusify@1.1.0:
     resolution:
@@ -4170,6 +4254,13 @@ packages:
       {
         integrity: sha512-9NThjpgZnifTkJpzTZ7Eue85S49QwpNhZTq6GRJwObb6jnLFNGB7Qm73V5HewTROPyxD0C29xqmaI68bQtV+hg==,
       }
+
+  sql-formatter@15.7.2:
+    resolution:
+      {
+        integrity: sha512-b0BGoM81KFRVSpZFwPpIPU5gng4YD8DI/taLD96NXCFRf5af3FzSE4aSwjKmxcyTmf/MfPu91j75883nRrWDBw==,
+      }
+    hasBin: true
 
   stable-hash@0.0.5:
     resolution:
@@ -5662,6 +5753,8 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
+  "@types/pegjs@0.10.6": {}
+
   "@types/prettier@2.7.3": {}
 
   "@types/react-dom@19.2.3(@types/react@19.2.14)":
@@ -5950,6 +6043,8 @@ snapshots:
 
   baseline-browser-mapping@2.10.11: {}
 
+  big-integer@1.6.52: {}
+
   bn.js@4.12.3: {}
 
   bn.js@5.2.3: {}
@@ -6068,6 +6163,8 @@ snapshots:
       table-layout: 1.0.2
       typical: 5.2.0
 
+  commander@2.20.3: {}
+
   concat-map@0.0.1: {}
 
   convert-source-map@2.0.0: {}
@@ -6134,6 +6231,8 @@ snapshots:
     optional: true
 
   diff@7.0.0: {}
+
+  discontinuous-range@1.0.0: {}
 
   doctrine@2.1.0:
     dependencies:
@@ -6954,6 +7053,8 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
+  jsox@1.2.125: {}
+
   jsx-ast-utils@3.3.5:
     dependencies:
       array-includes: 3.1.9
@@ -7070,6 +7171,8 @@ snapshots:
       yargs-parser: 21.1.1
       yargs-unparser: 2.0.0
 
+  moo@0.5.3: {}
+
   ms@2.1.3: {}
 
   nanoid@3.3.11: {}
@@ -7085,6 +7188,13 @@ snapshots:
       readable-stream: 3.6.2
       split2: 3.2.2
       through2: 4.0.2
+
+  nearley@2.20.1:
+    dependencies:
+      commander: 2.20.3
+      moo: 0.5.3
+      railroad-diagrams: 1.0.0
+      randexp: 0.4.6
 
   next@16.2.1(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -7118,6 +7228,11 @@ snapshots:
       semver: 6.3.1
 
   node-releases@2.0.36: {}
+
+  node-sql-parser@5.4.0:
+    dependencies:
+      "@types/pegjs": 0.10.6
+      big-integer: 1.6.52
 
   object-assign@4.1.1: {}
 
@@ -7232,6 +7347,14 @@ snapshots:
       prettier: 3.5.3
       semver: 7.7.4
 
+  prettier-plugin-sql@0.19.2(prettier@3.5.3):
+    dependencies:
+      jsox: 1.2.125
+      node-sql-parser: 5.4.0
+      prettier: 3.5.3
+      sql-formatter: 15.7.2
+      tslib: 2.8.1
+
   prettier@2.8.8: {}
 
   prettier@3.5.3: {}
@@ -7250,6 +7373,13 @@ snapshots:
   punycode@2.3.1: {}
 
   queue-microtask@1.2.3: {}
+
+  railroad-diagrams@1.0.0: {}
+
+  randexp@0.4.6:
+    dependencies:
+      discontinuous-range: 1.0.0
+      ret: 0.1.15
 
   randombytes@2.1.0:
     dependencies:
@@ -7316,6 +7446,8 @@ snapshots:
       object-keys: 1.1.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
+
+  ret@0.1.15: {}
 
   reusify@1.1.0: {}
 
@@ -7453,6 +7585,11 @@ snapshots:
   split2@3.2.2:
     dependencies:
       readable-stream: 3.6.2
+
+  sql-formatter@15.7.2:
+    dependencies:
+      argparse: 2.0.1
+      nearley: 2.20.1
 
   stable-hash@0.0.5: {}
 

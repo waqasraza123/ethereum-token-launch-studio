@@ -28,13 +28,13 @@ Contracts stay isolated from the web app and worker.
 
 ### `infra`
 
-This directory will hold infrastructure that is not an application package.
+This directory holds infrastructure that is not an application package.
 
-Planned contents:
+Current contents:
 
 - `infra/supabase`
 
-SQL migrations, database configuration, and infrastructure specific assets belong here.
+Migration files, Supabase config scaffolding, and database infrastructure assets belong here.
 
 ### `tooling`
 
@@ -70,7 +70,7 @@ This workspace owns:
 - App Router routes
 - layouts
 - shared web components
-- web only route constants and metadata
+- web-only route constants and metadata
 - future auth, admin, and public launch UX
 
 It does not own:
@@ -85,7 +85,7 @@ This workspace owns:
 
 - worker bootstrapping
 - runtime lifecycle
-- worker side environment parsing
+- worker-side environment parsing
 - future background jobs and operational processors
 
 It does not own:
@@ -101,7 +101,7 @@ This workspace owns:
 - Solidity source files
 - Hardhat configuration
 - contract tests
-- contract side scripts
+- contract-side scripts
 - future deployment and verification flows
 
 It does not own:
@@ -110,6 +110,21 @@ It does not own:
 - React UI
 - application business tables
 - Supabase migrations
+
+### `infra/supabase`
+
+This boundary owns:
+
+- migration files
+- migration manifest validation
+- Supabase configuration scaffolding
+- future RLS, policies, functions, triggers, and schema evolution
+
+It does not own:
+
+- runtime web code
+- worker runtime code
+- contract source code
 
 ## Boundary rules
 
@@ -120,3 +135,4 @@ It does not own:
 - do not introduce Docker in the foundation phase
 - do not introduce product logic in root tooling files
 - do not introduce token, sale, claim, or vesting logic in the contracts workspace before the dedicated contract phases
+- do not introduce business tables into the baseline infra migration before Phase 2

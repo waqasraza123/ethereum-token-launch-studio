@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 .next
+.supabase
 .turbo
 coverage
 dist

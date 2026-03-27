@@ -1,0 +1,10 @@
+project_id = "ethereum-token-launch-studio"
+
+[api]
+enabled = true
+schemas = ["public", "app_public"]
+extra_search_path = ["public", "app_public", "app_private", "app_audit"]
+max_rows = 1000
+
+[db]
+major_version = 17

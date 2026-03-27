@@ -10,17 +10,18 @@ This repo currently includes:
 - a bootable Next.js web shell
 - a bootable Node worker shell
 - a bootable Hardhat 3 contracts workspace
+- a bootable Supabase infra boundary with a minimal baseline migration
 - shared TypeScript and ESLint tooling
 - phase and architecture docs
 
-This repo does not yet include real product contracts, database infrastructure, auth, project data, or blockchain business logic.
+This repo does not yet include real product contracts, database business tables, auth wiring, project data, or blockchain business logic.
 
 ## Top level structure
 
 - `apps/web` for the public and admin web surface
 - `apps/worker` for future background jobs and operational processing
-- `packages/contracts` for Solidity contracts, tests, and contract side scripts
-- `infra` for database and infrastructure assets
+- `packages/contracts` for Solidity contracts, tests, and contract-side scripts
+- `infra/supabase` for migration files and Supabase infrastructure scaffolding
 - `tooling` for shared linting and TypeScript config
 - `docs` for architecture notes, phase specs, and runbooks
 
@@ -55,6 +56,11 @@ This repo does not yet include real product contracts, database infrastructure, 
     pnpm contracts:test
     pnpm --filter @token-launch-studio/contracts accounts
 
+## Migration verification
+
+    pnpm db:list
+    pnpm db:validate
+
 ## Full repo verification
 
     pnpm format:check
@@ -63,15 +69,16 @@ This repo does not yet include real product contracts, database infrastructure, 
     pnpm test
     pnpm contracts:compile
     pnpm contracts:test
+    pnpm db:validate
     pnpm build
     pnpm validate:foundation
 
 ## What is intentionally deferred
 
 - real token contracts
-- Supabase infrastructure
-- auth
+- Supabase auth wiring
 - product data model
 - blockchain business logic
 - wallet integration
 - protected admin behavior
+- local Supabase runtime workflows

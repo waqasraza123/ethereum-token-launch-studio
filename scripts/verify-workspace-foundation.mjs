@@ -1,6 +1,7 @@
 import { constants } from "node:fs";
 import { access, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { validateSupabaseMigrationManifest } from "./lib/supabase-migrations.mjs";
 
 const requiredPaths = [
   ".editorconfig",
@@ -23,6 +24,10 @@ const requiredPaths = [
   "docs/phases/phase-1-foundation.md",
   "docs/runbooks/local-setup.md",
   "scripts/workspace-foundation.test.mjs",
+  "scripts/supabase-migrations.test.mjs",
+  "scripts/lib/supabase-migrations.mjs",
+  "scripts/list-migrations.mjs",
+  "scripts/validate-migrations.mjs",
   "apps/web/package.json",
   "apps/web/tsconfig.json",
   "apps/web/next-env.d.ts",
@@ -45,7 +50,6 @@ const requiredPaths = [
   "apps/worker/src/index.ts",
   "apps/worker/src/bootstrap/start-worker.ts",
   "apps/worker/src/config/env.ts",
-  "apps/worker/src/config/env.test.ts",
   "apps/worker/src/core/worker-runtime.ts",
   "packages/contracts/package.json",
   "packages/contracts/tsconfig.json",
@@ -54,12 +58,17 @@ const requiredPaths = [
   "packages/contracts/contracts/foundation/Phase1Sentinel.sol",
   "packages/contracts/test/Phase1Sentinel.test.ts",
   "packages/contracts/scripts/print-accounts.ts",
+  "infra/supabase/README.md",
+  "infra/supabase/config.toml",
+  "infra/supabase/migrations/0001_phase_1_baseline.sql",
 ];
 
 const requiredRootScripts = [
   "build",
   "contracts:compile",
   "contracts:test",
+  "db:list",
+  "db:validate",
   "dev:web",
   "dev:worker",
   "format",
@@ -71,7 +80,6 @@ const requiredRootScripts = [
 ];
 
 const requiredWorkspaceGlobs = ["apps/*", "packages/*"];
-
 const requiredTurboTasks = ["build", "dev", "lint", "typecheck", "test"];
 
 const requiredPackageDefinitions = [
@@ -163,6 +171,8 @@ const main = async () => {
       );
     }
   }
+
+  await validateSupabaseMigrationManifest();
 
   console.log("Workspace foundation validation passed.");
 };

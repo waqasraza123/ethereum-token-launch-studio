@@ -37,23 +37,21 @@ The contracts workspace should:
 - run the sentinel contract test suite
 - print local simulated signer addresses
 
+## Run the infra boundary proof commands
+
+    pnpm db:list
+    pnpm db:validate
+
+The infra boundary should:
+
+- list the migration files in sequence order
+- validate migration naming, ordering, and non-empty content
+- keep the baseline migration non-product
+
 ## Targeted verification
 
-    pnpm --filter @token-launch-studio/web lint
-    pnpm --filter @token-launch-studio/web typecheck
-    pnpm --filter @token-launch-studio/web test
-    pnpm --filter @token-launch-studio/web build
-
-    pnpm --filter @token-launch-studio/worker lint
-    pnpm --filter @token-launch-studio/worker typecheck
-    pnpm --filter @token-launch-studio/worker test
-    pnpm --filter @token-launch-studio/worker build
-
-    pnpm --filter @token-launch-studio/contracts lint
-    pnpm --filter @token-launch-studio/contracts typecheck
-    pnpm contracts:compile
-    pnpm contracts:test
-
+    pnpm db:list
+    pnpm db:validate
     pnpm validate:foundation
 
 ## Full repo verification
@@ -64,11 +62,12 @@ The contracts workspace should:
     pnpm test
     pnpm contracts:compile
     pnpm contracts:test
+    pnpm db:validate
     pnpm build
     pnpm validate:foundation
 
 ## Current status
 
-This phase now proves repo tooling plus web, worker, and contracts workspace boundaries only.
+This phase now proves repo tooling plus web, worker, contracts, and infra boundary scaffolding only.
 
-Database infrastructure, auth, and blockchain product logic are intentionally deferred to later commits.
+Business schema, auth, and blockchain product logic are intentionally deferred to later commits.

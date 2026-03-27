@@ -10,13 +10,15 @@
     "build": "turbo run build",
     "contracts:compile": "pnpm --filter @token-launch-studio/contracts compile",
     "contracts:test": "pnpm --filter @token-launch-studio/contracts test",
+    "db:list": "node scripts/list-migrations.mjs",
+    "db:validate": "node scripts/validate-migrations.mjs",
     "dev:web": "turbo run dev --filter=@token-launch-studio/web",
     "dev:worker": "turbo run dev --filter=@token-launch-studio/worker",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --plugin prettier-plugin-solidity --plugin prettier-plugin-sql --write .",
+    "format:check": "prettier --plugin prettier-plugin-solidity --plugin prettier-plugin-sql --check .",
     "lint": "eslint . --max-warnings=0 && turbo run lint",
+    "test": "node --test scripts/workspace-foundation.test.mjs scripts/supabase-migrations.test.mjs && turbo run test",
     "typecheck": "tsc --showConfig -p tooling/typescript/node.json > /dev/null && tsc --showConfig -p tooling/typescript/nextjs.json > /dev/null && turbo run typecheck",
-    "test": "node --test scripts/workspace-foundation.test.mjs && turbo run test",
     "validate:foundation": "node scripts/verify-workspace-foundation.mjs"
   },
   "devDependencies": {
@@ -27,6 +29,7 @@
     "globals": "16.0.0",
     "prettier": "3.5.3",
     "prettier-plugin-solidity": "2.3.1",
+    "prettier-plugin-sql": "0.19.2",
     "turbo": "2.5.3",
     "typescript": "5.8.3",
     "typescript-eslint": "8.57.2"
