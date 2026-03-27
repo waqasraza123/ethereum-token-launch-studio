@@ -47,10 +47,19 @@ const requiredPaths = [
   "apps/worker/src/config/env.ts",
   "apps/worker/src/config/env.test.ts",
   "apps/worker/src/core/worker-runtime.ts",
+  "packages/contracts/package.json",
+  "packages/contracts/tsconfig.json",
+  "packages/contracts/eslint.config.mjs",
+  "packages/contracts/hardhat.config.ts",
+  "packages/contracts/contracts/foundation/Phase1Sentinel.sol",
+  "packages/contracts/test/Phase1Sentinel.test.ts",
+  "packages/contracts/scripts/print-accounts.ts",
 ];
 
 const requiredRootScripts = [
   "build",
+  "contracts:compile",
+  "contracts:test",
   "dev:web",
   "dev:worker",
   "format",
@@ -75,6 +84,11 @@ const requiredPackageDefinitions = [
     path: "apps/worker/package.json",
     name: "@token-launch-studio/worker",
     scripts: ["build", "dev", "lint", "test", "typecheck"],
+  },
+  {
+    path: "packages/contracts/package.json",
+    name: "@token-launch-studio/contracts",
+    scripts: ["accounts", "build", "compile", "lint", "test", "typecheck"],
   },
 ];
 

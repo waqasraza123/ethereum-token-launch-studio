@@ -18,9 +18,9 @@ The worker owns background runtime behavior and future jobs.
 
 ### `packages`
 
-This directory will hold reusable or isolated workspaces.
+This directory holds isolated workspaces.
 
-Planned contents:
+Current contents:
 
 - `packages/contracts`
 
@@ -96,13 +96,20 @@ It does not own:
 
 ### `packages/contracts`
 
-This workspace is reserved for:
+This workspace owns:
 
-- Solidity contracts
+- Solidity source files
+- Hardhat configuration
 - contract tests
-- deployment and verification scripts
+- contract side scripts
+- future deployment and verification flows
 
-It does not belong inside the web app.
+It does not own:
+
+- web routing
+- React UI
+- application business tables
+- Supabase migrations
 
 ## Boundary rules
 
@@ -112,3 +119,4 @@ It does not belong inside the web app.
 - do not introduce microservices
 - do not introduce Docker in the foundation phase
 - do not introduce product logic in root tooling files
+- do not introduce token, sale, claim, or vesting logic in the contracts workspace before the dedicated contract phases

@@ -40,6 +40,12 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Compile contracts
+        run: pnpm contracts:compile
+
+      - name: Run contract tests
+        run: pnpm contracts:test
+
       - name: Build runtime packages
         run: pnpm build
 

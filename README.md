@@ -9,16 +9,17 @@ This repo currently includes:
 - root monorepo tooling and CI
 - a bootable Next.js web shell
 - a bootable Node worker shell
+- a bootable Hardhat 3 contracts workspace
 - shared TypeScript and ESLint tooling
 - phase and architecture docs
 
-This repo does not yet include contracts, database infrastructure, auth, project data, or blockchain business logic.
+This repo does not yet include real product contracts, database infrastructure, auth, project data, or blockchain business logic.
 
 ## Top level structure
 
 - `apps/web` for the public and admin web surface
 - `apps/worker` for future background jobs and operational processing
-- `packages` for isolated workspaces such as Solidity contracts
+- `packages/contracts` for Solidity contracts, tests, and contract side scripts
 - `infra` for database and infrastructure assets
 - `tooling` for shared linting and TypeScript config
 - `docs` for architecture notes, phase specs, and runbooks
@@ -29,6 +30,7 @@ This repo does not yet include contracts, database infrastructure, auth, project
 - pnpm workspaces
 - turborepo
 - Next.js App Router
+- Hardhat 3
 - ESLint
 - Prettier
 - TypeScript
@@ -45,17 +47,13 @@ This repo does not yet include contracts, database infrastructure, auth, project
 
     pnpm dev:worker
 
-## Targeted verification
+## Contracts verification
 
-    pnpm --filter @token-launch-studio/web lint
-    pnpm --filter @token-launch-studio/web typecheck
-    pnpm --filter @token-launch-studio/web test
-    pnpm --filter @token-launch-studio/web build
-    pnpm --filter @token-launch-studio/worker lint
-    pnpm --filter @token-launch-studio/worker typecheck
-    pnpm --filter @token-launch-studio/worker test
-    pnpm --filter @token-launch-studio/worker build
-    pnpm validate:foundation
+    pnpm --filter @token-launch-studio/contracts lint
+    pnpm --filter @token-launch-studio/contracts typecheck
+    pnpm contracts:compile
+    pnpm contracts:test
+    pnpm --filter @token-launch-studio/contracts accounts
 
 ## Full repo verification
 
@@ -63,15 +61,17 @@ This repo does not yet include contracts, database infrastructure, auth, project
     pnpm lint
     pnpm typecheck
     pnpm test
+    pnpm contracts:compile
+    pnpm contracts:test
     pnpm build
     pnpm validate:foundation
 
 ## What is intentionally deferred
 
-- contracts workspace
+- real token contracts
 - Supabase infrastructure
 - auth
 - product data model
-- blockchain logic
+- blockchain business logic
 - wallet integration
 - protected admin behavior
