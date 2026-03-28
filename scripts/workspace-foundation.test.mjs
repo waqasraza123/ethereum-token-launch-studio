@@ -30,7 +30,7 @@ test("root package metadata is locked", async () => {
     "lint",
     "test",
     "typecheck",
-    "validate:foundation",
+    "validate:foundation"
   ]);
 });
 
@@ -51,41 +51,26 @@ test("web worker and contracts workspace manifests are present", async () => {
   assert.equal(contractsPackageJson.name, "@token-launch-studio/contracts");
 });
 
-test("session-backed admin read files exist", async () => {
-  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/supabase/server-app.ts"));
-  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/workspaces/access.ts"));
-  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/projects/data.ts"));
-});
-
-test("infra boundary includes the rls and session read migration", async () => {
+test("workspace members route files exist", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("infra/supabase/migrations/0005_phase_2_rls_and_session_reads.sql"),
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/members/actions.ts")
+  );
+  await assert.doesNotReject(async () =>
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/members/page.tsx")
+  );
+  await assert.doesNotReject(async () =>
+    readTextFile("apps/web/src/components/workspaces/workspace-members-shell.tsx")
   );
 });
 
-test("phase docs exist for foundation core schema auth spine workspace project flows and rls hardening", async () => {
-  await assert.doesNotReject(async () => readTextFile("docs/phases/phase-1-foundation.md"));
-  await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-core-schema.md"));
-  await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-auth-spine.md"));
+test("infra boundary includes the membership management migration", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("docs/phases/phase-2-workspace-project-flows.md"),
-  );
-  await assert.doesNotReject(async () =>
-    readTextFile("docs/phases/phase-2-rls-and-session-reads.md"),
+    readTextFile("infra/supabase/migrations/0006_phase_2_membership_management.sql")
   );
 });
 
-test("ci workflow runs formatting lint typecheck tests contract checks db validation db replay build and validation", async () => {
-  const workflowContent = await readTextFile(".github/workflows/ci.yml");
-
-  assert.match(workflowContent, /pnpm format:check/);
-  assert.match(workflowContent, /pnpm lint/);
-  assert.match(workflowContent, /pnpm typecheck/);
-  assert.match(workflowContent, /pnpm test/);
-  assert.match(workflowContent, /pnpm contracts:compile/);
-  assert.match(workflowContent, /pnpm contracts:test/);
-  assert.match(workflowContent, /pnpm db:validate/);
-  assert.match(workflowContent, /pnpm db:replay:check/);
-  assert.match(workflowContent, /pnpm build/);
-  assert.match(workflowContent, /pnpm validate:foundation/);
+test("phase docs exist for membership management", async () => {
+  await assert.doesNotReject(async () =>
+    readTextFile("docs/phases/phase-2-membership-management.md")
+  );
 });

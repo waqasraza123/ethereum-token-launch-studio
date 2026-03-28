@@ -2,7 +2,7 @@ import {
   closeSupabaseReplayDatabase,
   replaySupabaseMigrations,
   resetReplaySession,
-  setReplayAuthenticatedUser,
+  setReplayAuthenticatedUser
 } from "./lib/supabase-replay.mjs";
 
 const firstUserId = "00000000-0000-0000-0000-000000000001";
@@ -12,10 +12,10 @@ const { database, manifest } = await replaySupabaseMigrations();
 
 try {
   await database.exec(`
-    insert into auth.users (id)
+    insert into auth.users (id, email)
     values
-      ('${firstUserId}'),
-      ('${secondUserId}');
+      ('${firstUserId}', 'owner@example.com'),
+      ('${secondUserId}', 'viewer@example.com');
   `);
 
   await setReplayAuthenticatedUser(database, firstUserId);
@@ -30,54 +30,54 @@ try {
     )
   `);
 
-  const firstProjectResult = await database.query(`
+  const inviteResult = await database.query(`
     select *
-    from app_public.create_project(
-      '30000000-0000-0000-0000-000000000001',
+    from app_public.invite_workspace_member(
       '10000000-0000-0000-0000-000000000001',
-      'alpha-launch',
-      'Alpha Launch',
-      'Replay validation fixture'
+      '20000000-0000-0000-0000-000000000002',
+      'viewer@example.com',
+      'viewer'
     )
+  `);
+
+  const membersResult = await database.query(`
+    select *
+    from app_public.list_workspace_members('10000000-0000-0000-0000-000000000001')
   `);
 
   await setReplayAuthenticatedUser(database, secondUserId);
 
-  await database.query(`
-    select *
-    from app_public.bootstrap_workspace(
-      '10000000-0000-0000-0000-000000000002',
-      'studio-beta',
-      'Studio Beta',
-      '20000000-0000-0000-0000-000000000002'
-    )
-  `);
-
-  await database.query(`
-    select *
-    from app_public.create_project(
-      '30000000-0000-0000-0000-000000000002',
-      '10000000-0000-0000-0000-000000000002',
-      'beta-launch',
-      'Beta Launch',
-      'Replay validation fixture'
-    )
+  const secondUserVisibleCountsBeforeRemoval = await database.query(`
+    select
+      (select count(*)::int from app_public.workspaces) as visible_workspaces,
+      (select count(*)::int from app_public.projects) as visible_projects,
+      (select count(*)::int from app_public.workspace_members) as visible_workspace_members
   `);
 
   await setReplayAuthenticatedUser(database, firstUserId);
 
-  const visibleCountsResult = await database.query(`
+  const removalResult = await database.query(`
+    select *
+    from app_public.remove_workspace_member('20000000-0000-0000-0000-000000000002')
+  `);
+
+  await setReplayAuthenticatedUser(database, secondUserId);
+
+  const secondUserVisibleCountsAfterRemoval = await database.query(`
     select
       (select count(*)::int from app_public.workspaces) as visible_workspaces,
-      (select count(*)::int from app_public.workspace_members) as visible_workspace_members,
-      (select count(*)::int from app_public.projects) as visible_projects
+      (select count(*)::int from app_public.projects) as visible_projects,
+      (select count(*)::int from app_public.workspace_members) as visible_workspace_members
   `);
 
   console.info("supabase.migrations.replay_valid", {
-    latestMigration: manifest.at(-1)?.filename ?? null,
-    firstProject: firstProjectResult.rows[0],
     firstWorkspace: firstWorkspaceResult.rows[0],
-    visibleCountsForFirstUser: visibleCountsResult.rows[0],
+    invitedMember: inviteResult.rows[0],
+    latestMigration: manifest.at(-1)?.filename ?? null,
+    memberEmails: membersResult.rows.map((row) => row.email),
+    removedMember: removalResult.rows[0],
+    secondUserVisibleCountsAfterRemoval: secondUserVisibleCountsAfterRemoval.rows[0],
+    secondUserVisibleCountsBeforeRemoval: secondUserVisibleCountsBeforeRemoval.rows[0]
   });
 } finally {
   await resetReplaySession(database);

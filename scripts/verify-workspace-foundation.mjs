@@ -25,6 +25,7 @@ const requiredPaths = [
   "docs/phases/phase-2-auth-spine.md",
   "docs/phases/phase-2-workspace-project-flows.md",
   "docs/phases/phase-2-rls-and-session-reads.md",
+  "docs/phases/phase-2-membership-management.md",
   "docs/runbooks/local-setup.md",
   "scripts/workspace-foundation.test.mjs",
   "scripts/supabase-migrations.test.mjs",
@@ -44,12 +45,25 @@ const requiredPaths = [
   "apps/web/src/app/(admin)/dashboard/actions.ts",
   "apps/web/src/app/(admin)/dashboard/page.tsx",
   "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/page.tsx",
+  "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/members/actions.ts",
+  "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/members/page.tsx",
   "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/new/actions.ts",
   "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/new/page.tsx",
   "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/page.tsx",
+  "apps/web/src/components/dashboard/dashboard-shell.tsx",
+  "apps/web/src/components/dashboard/sign-out-form.tsx",
+  "apps/web/src/components/dashboard/workspace-dashboard-shell.tsx",
+  "apps/web/src/components/workspaces/workspace-members-shell.tsx",
+  "apps/web/src/components/workspaces/workspace-member-invite-form.tsx",
+  "apps/web/src/components/workspaces/workspace-member-role-form.tsx",
+  "apps/web/src/components/workspaces/workspace-member-remove-form.tsx",
   "apps/web/src/lib/projects/data.ts",
+  "apps/web/src/lib/routing/route-paths.ts",
+  "apps/web/src/lib/slugs.ts",
   "apps/web/src/lib/supabase/server-app.ts",
   "apps/web/src/lib/workspaces/access.ts",
+  "apps/web/src/lib/workspaces/members.ts",
+  "apps/web/src/lib/workspaces/membership-input.ts",
   "apps/worker/package.json",
   "apps/worker/tsconfig.json",
   "apps/worker/eslint.config.mjs",
@@ -71,6 +85,7 @@ const requiredPaths = [
   "infra/supabase/migrations/0003_phase_2_auth_workspace_bootstrap.sql",
   "infra/supabase/migrations/0004_phase_2_workspace_project_flows.sql",
   "infra/supabase/migrations/0005_phase_2_rls_and_session_reads.sql",
+  "infra/supabase/migrations/0006_phase_2_membership_management.sql"
 ];
 
 const requiredRootScripts = [
@@ -87,7 +102,7 @@ const requiredRootScripts = [
   "lint",
   "typecheck",
   "test",
-  "validate:foundation",
+  "validate:foundation"
 ];
 
 const requiredWorkspaceGlobs = ["apps/*", "packages/*"];
@@ -97,18 +112,18 @@ const requiredPackageDefinitions = [
   {
     path: "apps/web/package.json",
     name: "@token-launch-studio/web",
-    scripts: ["build", "dev", "lint", "test", "typecheck"],
+    scripts: ["build", "dev", "lint", "test", "typecheck"]
   },
   {
     path: "apps/worker/package.json",
     name: "@token-launch-studio/worker",
-    scripts: ["build", "dev", "lint", "test", "typecheck"],
+    scripts: ["build", "dev", "lint", "test", "typecheck"]
   },
   {
     path: "packages/contracts/package.json",
     name: "@token-launch-studio/contracts",
-    scripts: ["accounts", "build", "compile", "lint", "test", "typecheck"],
-  },
+    scripts: ["accounts", "build", "compile", "lint", "test", "typecheck"]
+  }
 ];
 
 const ensurePathExists = async (relativePath) => {
@@ -138,7 +153,7 @@ const main = async () => {
 
   const rootScripts = packageJson.scripts ?? {};
   const missingRootScripts = requiredRootScripts.filter(
-    (scriptName) => !(scriptName in rootScripts),
+    (scriptName) => !(scriptName in rootScripts)
   );
 
   if (missingRootScripts.length > 0) {
@@ -147,12 +162,12 @@ const main = async () => {
 
   const workspaceFileContent = await readFile(resolve("pnpm-workspace.yaml"), "utf8");
   const missingWorkspaceGlobs = requiredWorkspaceGlobs.filter(
-    (workspaceGlob) => !workspaceFileContent.includes(`- ${workspaceGlob}`),
+    (workspaceGlob) => !workspaceFileContent.includes(`- ${workspaceGlob}`)
   );
 
   if (missingWorkspaceGlobs.length > 0) {
     throw new Error(
-      `pnpm-workspace.yaml is missing required globs: ${missingWorkspaceGlobs.join(", ")}`,
+      `pnpm-workspace.yaml is missing required globs: ${missingWorkspaceGlobs.join(", ")}`
     );
   }
 
@@ -173,12 +188,12 @@ const main = async () => {
 
     const workspaceScripts = workspacePackageJson.scripts ?? {};
     const missingWorkspaceScripts = definition.scripts.filter(
-      (scriptName) => !(scriptName in workspaceScripts),
+      (scriptName) => !(scriptName in workspaceScripts)
     );
 
     if (missingWorkspaceScripts.length > 0) {
       throw new Error(
-        `${definition.path} is missing required scripts: ${missingWorkspaceScripts.join(", ")}`,
+        `${definition.path} is missing required scripts: ${missingWorkspaceScripts.join(", ")}`
       );
     }
   }

@@ -15,7 +15,7 @@ type DashboardPageProps = Readonly<{
 
 const readSingleSearchParam = (
   searchParams: Record<string, string | string[] | undefined>,
-  key: string,
+  key: string
 ): string | null => {
   const value = searchParams[key];
 
@@ -30,7 +30,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const currentUser = await requireCurrentUser();
   const resolvedSearchParams = await searchParams;
   const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
-  const createdMessage =
+  const statusMessage =
     readSingleSearchParam(resolvedSearchParams, "created") === "1"
       ? "Workspace created successfully."
       : null;
@@ -44,21 +44,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         description="This route is now authenticated through the user session and can bootstrap the first workspace without a service-role read path."
         actions={<SignOutForm />}
       >
-        {createdMessage ? <div className="status-banner success">{createdMessage}</div> : null}
+        {statusMessage ? <div className="status-banner success">{statusMessage}</div> : null}
         <BootstrapWorkspaceForm errorMessage={errorMessage} />
       </PageShell>
     );
   }
 
-  const onlyWorkspaceAccess = workspaceAccess[0];
+  const firstWorkspaceAccess = workspaceAccess[0];
 
-  if (workspaceAccess.length === 1 && onlyWorkspaceAccess) {
-    redirect(getWorkspaceDashboardPath(onlyWorkspaceAccess.workspace.slug));
+  if (workspaceAccess.length === 1 && firstWorkspaceAccess) {
+    redirect(getWorkspaceDashboardPath(firstWorkspaceAccess.workspace.slug));
   }
 
   return (
     <DashboardShell
       errorMessage={errorMessage}
+      statusMessage={statusMessage}
       user={currentUser}
       workspaceAccess={workspaceAccess}
     />

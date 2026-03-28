@@ -3,8 +3,6 @@ import { validateSupabaseMigrationManifest } from "./supabase-migrations.mjs";
 
 const replayPreludeSql = `
 do $block$
-declare
-  v_session_user text := session_user;
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
     create role anon;
@@ -13,17 +11,25 @@ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then
     create role authenticated;
   end if;
+end;
+$block$;
 
-  execute format('grant anon to %I', v_session_user);
-  execute format('grant authenticated to %I', v_session_user);
+do $block$
+begin
+  execute format('grant anon to %I', current_user);
+  execute format('grant authenticated to %I', current_user);
 end;
 $block$;
 
 create schema if not exists auth;
 
 create table if not exists auth.users (
-  id uuid primary key
+  id uuid primary key,
+  email text
 );
+
+create unique index if not exists auth_users_email_lower_unique
+  on auth.users (lower(email));
 
 create or replace function auth.uid()
 returns uuid

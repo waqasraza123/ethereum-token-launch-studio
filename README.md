@@ -15,37 +15,46 @@ This repo currently includes:
 - a server-side auth/data spine for sign-in and workspace bootstrap
 - protected workspace/project routes
 - database-side authorization hardening and session-backed admin reads
+- the first owner-only workspace membership management flow
 - shared TypeScript and ESLint tooling
 - phase and architecture docs
 
-This repo does not yet include invitation flows, contract registry tables, token product logic, sale logic, or app-side blockchain integration.
+This repo does not yet include invite email delivery, contract registry tables, token product logic, sale logic, or app-side blockchain integration.
 
 ## Install
 
-    pnpm install
+```bash
+pnpm install
+```
 
 ## Database verification
 
-    pnpm db:list
-    pnpm db:validate
-    pnpm db:replay:check
+```bash
+pnpm db:list
+pnpm db:validate
+pnpm db:replay:check
+```
 
 ## Web verification
 
-    pnpm --filter @token-launch-studio/web lint
-    pnpm --filter @token-launch-studio/web typecheck
-    pnpm --filter @token-launch-studio/web test
-    pnpm --filter @token-launch-studio/web build
+```bash
+pnpm --filter @token-launch-studio/web lint
+pnpm --filter @token-launch-studio/web typecheck
+pnpm --filter @token-launch-studio/web test
+pnpm --filter @token-launch-studio/web build
+```
 
 ## Full repo verification
 
-    pnpm format:check
-    pnpm lint
-    pnpm typecheck
-    pnpm test
-    pnpm contracts:compile
-    pnpm contracts:test
-    pnpm db:validate
-    pnpm db:replay:check
-    pnpm build
-    pnpm validate:foundation
+```bash
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm contracts:compile
+pnpm contracts:test
+pnpm db:validate
+pnpm db:replay:check
+pnpm build
+pnpm validate:foundation
+```

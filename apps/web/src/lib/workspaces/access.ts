@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { createServerAppSupabaseClient } from "@/lib/supabase/server-app";
 
-export const WorkspaceRoleSchema = z.enum(["owner", "ops_manager", "finance_manager", "viewer"]);
+export const WorkspaceRoleSchema = z.enum([
+  "owner",
+  "ops_manager",
+  "finance_manager",
+  "viewer"
+]);
 
 export type WorkspaceRole = z.infer<typeof WorkspaceRoleSchema>;
 
@@ -30,7 +35,12 @@ type WorkspaceRow = Readonly<{
 export const canCreateProjectsForRole = (role: WorkspaceRole): boolean =>
   role === "owner" || role === "ops_manager";
 
-export const getWorkspaceAccessOverview = async (): Promise<readonly WorkspaceAccessContext[]> => {
+export const canManageWorkspaceMembersForRole = (role: WorkspaceRole): boolean =>
+  role === "owner";
+
+export const getWorkspaceAccessOverview = async (): Promise<
+  readonly WorkspaceAccessContext[]
+> => {
   const supabase = await createServerAppSupabaseClient();
 
   const { data: membershipRows, error: membershipError } = await supabase
@@ -61,10 +71,7 @@ export const getWorkspaceAccessOverview = async (): Promise<readonly WorkspaceAc
   }
 
   const workspacesById = new Map(
-    ((workspaceRows ?? []) as readonly WorkspaceRow[]).map((workspace) => [
-      workspace.id,
-      workspace,
-    ]),
+    ((workspaceRows ?? []) as readonly WorkspaceRow[]).map((workspace) => [workspace.id, workspace])
   );
 
   return memberships.flatMap((membership) => {
@@ -80,15 +87,15 @@ export const getWorkspaceAccessOverview = async (): Promise<readonly WorkspaceAc
         workspace: {
           id: workspace.id,
           name: workspace.name,
-          slug: workspace.slug,
-        },
-      },
+          slug: workspace.slug
+        }
+      }
     ];
   });
 };
 
 export const getWorkspaceAccessBySlug = async (
-  workspaceSlug: string,
+  workspaceSlug: string
 ): Promise<WorkspaceAccessContext | null> => {
   const supabase = await createServerAppSupabaseClient();
 
@@ -114,7 +121,7 @@ export const getWorkspaceAccessBySlug = async (
 
   if (membershipError) {
     throw new Error(
-      `Could not load current user membership for workspace: ${membershipError.message}`,
+      `Could not load current user membership for workspace: ${membershipError.message}`
     );
   }
 
@@ -127,7 +134,7 @@ export const getWorkspaceAccessBySlug = async (
     workspace: {
       id: workspaceRow.id,
       name: workspaceRow.name,
-      slug: workspaceRow.slug,
-    },
+      slug: workspaceRow.slug
+    }
   };
 };

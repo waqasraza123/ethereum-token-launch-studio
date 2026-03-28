@@ -7,6 +7,7 @@ import { SignOutForm } from "./sign-out-form";
 
 type DashboardShellProps = Readonly<{
   errorMessage: string | null;
+  statusMessage: string | null;
   user: AuthenticatedUser;
   workspaceAccess: readonly WorkspaceAccessContext[];
 }>;
@@ -14,10 +15,15 @@ type DashboardShellProps = Readonly<{
 const selectorNotes = [
   "The root dashboard route now acts as a workspace selector when the authenticated user belongs to multiple workspaces.",
   "Users with a single workspace are redirected directly into that workspace route.",
-  "Users without memberships still land in first-workspace bootstrap mode.",
+  "Users without memberships still land in first-workspace bootstrap mode."
 ];
 
-export function DashboardShell({ errorMessage, user, workspaceAccess }: DashboardShellProps) {
+export function DashboardShell({
+  errorMessage,
+  statusMessage,
+  user,
+  workspaceAccess
+}: DashboardShellProps) {
   return (
     <PageShell
       eyebrow="Workspace selector"
@@ -25,6 +31,7 @@ export function DashboardShell({ errorMessage, user, workspaceAccess }: Dashboar
       description={`Signed in as ${user.email ?? user.id}. Workspace routes now drive the protected admin surface.`}
       actions={<SignOutForm />}
     >
+      {statusMessage ? <div className="status-banner success">{statusMessage}</div> : null}
       {errorMessage ? <div className="status-banner error">{errorMessage}</div> : null}
       <section className="placeholder-panel">
         <h2 className="placeholder-panel-title">Available workspaces</h2>

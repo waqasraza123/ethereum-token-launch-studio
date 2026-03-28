@@ -2,11 +2,15 @@ import Link from "next/link";
 import { PageShell } from "@/components/foundation/page-shell";
 import type { ProjectOverview } from "@/lib/projects/data";
 import {
+  getWorkspaceMembersPath,
   getWorkspaceProjectNewPath,
   getWorkspaceProjectPath,
-  routePaths,
+  routePaths
 } from "@/lib/routing/route-paths";
-import { canCreateProjectsForRole, type WorkspaceAccessContext } from "@/lib/workspaces/access";
+import {
+  canCreateProjectsForRole,
+  type WorkspaceAccessContext
+} from "@/lib/workspaces/access";
 import { SignOutForm } from "./sign-out-form";
 
 type WorkspaceDashboardShellProps = Readonly<{
@@ -18,13 +22,13 @@ type WorkspaceDashboardShellProps = Readonly<{
 const workspaceNotes = [
   "This route is keyed by workspace slug and only renders after a server-side membership check.",
   "Project reads are now scoped to the authorized workspace instead of coming from a global dashboard placeholder.",
-  "Project creation is linked from here only when the current role is allowed to create projects.",
+  "Workspace membership management now lives in a dedicated protected members route."
 ];
 
 export function WorkspaceDashboardShell({
   errorMessage,
   projects,
-  workspaceAccess,
+  workspaceAccess
 }: WorkspaceDashboardShellProps) {
   const canCreateProjects = canCreateProjectsForRole(workspaceAccess.role);
 
@@ -37,6 +41,12 @@ export function WorkspaceDashboardShell({
         <div className="page-shell-actions">
           <Link className="button-link secondary" href={routePaths.dashboard}>
             All workspaces
+          </Link>
+          <Link
+            className="button-link secondary"
+            href={getWorkspaceMembersPath(workspaceAccess.workspace.slug)}
+          >
+            Members
           </Link>
           {canCreateProjects ? (
             <Link
@@ -70,7 +80,9 @@ export function WorkspaceDashboardShell({
           Projects are now read by workspace and linked through protected workspace-aware routes.
         </p>
         {projects.length === 0 ? (
-          <p className="placeholder-panel-description">No projects exist yet for this workspace.</p>
+          <p className="placeholder-panel-description">
+            No projects exist yet for this workspace.
+          </p>
         ) : (
           <ul className="dashboard-list">
             {projects.map((project) => (
@@ -83,7 +95,10 @@ export function WorkspaceDashboardShell({
                 <div className="page-shell-actions">
                   <Link
                     className="button-link secondary"
-                    href={getWorkspaceProjectPath(workspaceAccess.workspace.slug, project.slug)}
+                    href={getWorkspaceProjectPath(
+                      workspaceAccess.workspace.slug,
+                      project.slug
+                    )}
                   >
                     Open project
                   </Link>
