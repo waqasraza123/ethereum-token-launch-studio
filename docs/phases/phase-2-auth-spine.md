@@ -19,9 +19,8 @@ Wire the first production-grade auth and workspace bootstrap flow on top of the 
 - sign-up
 - invitations
 - password reset
-- route-level RBAC beyond the dashboard shell
+- route-level workspace and project flows beyond the bootstrap/dashboard entry points
 - RLS policies
-- project creation UI
 - contract registry and deployment persistence
 - wallet integration
 
@@ -39,4 +38,4 @@ Wire the first production-grade auth and workspace bootstrap flow on top of the 
 - real end-to-end auth still requires a configured Supabase project and a valid user
 - RLS is not in place yet
 - membership reads still rely on service-role-backed server code
-- project creation flows are not wired yet
+- project creation and workspace-scoped routing are introduced in the next step

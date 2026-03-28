@@ -1,9 +1,11 @@
-import { BootstrapWorkspaceForm } from "@/components/workspaces/bootstrap-workspace-form";
+import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { SignOutForm } from "@/components/dashboard/sign-out-form";
 import { PageShell } from "@/components/foundation/page-shell";
+import { BootstrapWorkspaceForm } from "@/components/workspaces/bootstrap-workspace-form";
 import { requireCurrentUser } from "@/lib/auth/session";
-import { getWorkspaceAccessOverview } from "@/lib/workspaces/dashboard";
+import { getWorkspaceDashboardPath } from "@/lib/routing/route-paths";
+import { getWorkspaceAccessOverview } from "@/lib/workspaces/access";
 
 export const dynamic = "force-dynamic";
 
@@ -28,12 +30,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const currentUser = await requireCurrentUser();
   const resolvedSearchParams = await searchParams;
   const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
-  const createdMessage =
-    readSingleSearchParam(resolvedSearchParams, "created") === "1"
-      ? "Workspace created successfully."
-      : null;
-
   const workspaceAccess = await getWorkspaceAccessOverview(currentUser.id);
+  const [singleWorkspaceAccess] = workspaceAccess;
 
   if (workspaceAccess.length === 0) {
     return (
@@ -48,9 +46,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     );
   }
 
+  if (workspaceAccess.length === 1 && singleWorkspaceAccess) {
+    redirect(getWorkspaceDashboardPath(singleWorkspaceAccess.workspace.slug));
+  }
+
   return (
     <DashboardShell
-      createdMessage={createdMessage}
       errorMessage={errorMessage}
       user={currentUser}
       workspaceAccess={workspaceAccess}

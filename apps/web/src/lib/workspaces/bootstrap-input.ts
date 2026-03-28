@@ -1,19 +1,10 @@
 import { z } from "zod";
+import { normalizeAppSlug } from "@/lib/slugs";
 
 const workspaceSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export const normalizeWorkspaceSlug = (rawValue: FormDataEntryValue | null): string => {
-  if (typeof rawValue !== "string") {
-    return "";
-  }
-
-  return rawValue
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/--+/g, "-");
-};
+export const normalizeWorkspaceSlug = (rawValue: FormDataEntryValue | null): string =>
+  normalizeAppSlug(rawValue);
 
 export const WorkspaceBootstrapInputSchema = z.object({
   workspaceName: z.string().trim().min(1).max(120),

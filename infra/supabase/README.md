@@ -8,6 +8,7 @@ This directory exists to lock the database infrastructure boundary before app-si
 - `migrations/0001_phase_1_baseline.sql` for the minimal boundary setup
 - `migrations/0002_phase_2_core_business_schema.sql` for the first real business schema
 - `migrations/0003_phase_2_auth_workspace_bootstrap.sql` for the first authenticated bootstrap write
+- `migrations/0004_phase_2_workspace_project_flows.sql` for workspace-aware project creation
 
 ## Current migration scope
 
@@ -36,7 +37,15 @@ Creates the first real auth-aware write function:
 
 - `app_public.bootstrap_workspace(...)`
 - atomic workspace plus owner-membership creation
-- a future-safe bootstrap path for the first admin flow
+
+### `0004_phase_2_workspace_project_flows.sql`
+
+Creates the first role-aware project write function:
+
+- `app_public.create_project(...)`
+- membership validation by actor auth user id
+- role enforcement for project creation
+- atomic project insertion inside the authorized workspace
 
 ## Current proof commands
 

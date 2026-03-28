@@ -51,28 +51,33 @@ test("web worker and contracts workspace manifests are present", async () => {
   assert.equal(contractsPackageJson.name, "@token-launch-studio/contracts");
 });
 
-test("web auth spine files exist", async () => {
-  await assert.doesNotReject(async () => readTextFile("apps/web/src/proxy.ts"));
-  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/auth/session.ts"));
-  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/supabase/server.ts"));
+test("workspace and project route files exist", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(auth)/sign-in/actions.ts"),
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/page.tsx"),
   );
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/actions.ts"),
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/new/page.tsx"),
   );
-});
-
-test("infra boundary includes the phase 2 auth bootstrap migration", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("infra/supabase/migrations/0003_phase_2_auth_workspace_bootstrap.sql"),
+    readTextFile(
+      "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/page.tsx",
+    ),
   );
 });
 
-test("phase docs exist for foundation core schema and auth spine", async () => {
+test("infra boundary includes the workspace project flow migration", async () => {
+  await assert.doesNotReject(async () =>
+    readTextFile("infra/supabase/migrations/0004_phase_2_workspace_project_flows.sql"),
+  );
+});
+
+test("phase docs exist for foundation core schema auth spine and workspace project flows", async () => {
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-1-foundation.md"));
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-core-schema.md"));
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-auth-spine.md"));
+  await assert.doesNotReject(async () =>
+    readTextFile("docs/phases/phase-2-workspace-project-flows.md"),
+  );
 });
 
 test("ci workflow runs formatting lint typecheck tests contract checks db validation db replay build and validation", async () => {

@@ -1,20 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { routePaths } from "./route-paths.js";
+import {
+  getWorkspaceDashboardPath,
+  getWorkspaceProjectNewPath,
+  getWorkspaceProjectPath,
+  routePaths,
+} from "./route-paths.js";
 
 test("route paths are unique and stable", () => {
   const routeValues = Object.values(routePaths);
 
   assert.deepEqual(routePaths, {
+    dashboard: "/dashboard",
     home: "/",
     signIn: "/sign-in",
-    dashboard: "/dashboard",
   });
   assert.equal(new Set(routeValues).size, routeValues.length);
 });
 
-test("route paths always start with a slash", () => {
-  for (const routeValue of Object.values(routePaths)) {
-    assert.equal(routeValue.startsWith("/"), true);
-  }
+test("workspace route helpers build the expected paths", () => {
+  assert.equal(getWorkspaceDashboardPath("studio-alpha"), "/dashboard/studio-alpha");
+  assert.equal(getWorkspaceProjectNewPath("studio-alpha"), "/dashboard/studio-alpha/projects/new");
+  assert.equal(
+    getWorkspaceProjectPath("studio-alpha", "alpha-launch"),
+    "/dashboard/studio-alpha/projects/alpha-launch",
+  );
 });

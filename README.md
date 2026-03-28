@@ -12,7 +12,8 @@ This repo currently includes:
 - a bootable Hardhat 3 contracts workspace
 - a replayable Supabase infra boundary
 - a core Phase 2 business schema for workspaces, workspace members, and projects
-- a server-side auth/data spine for sign-in, protected admin access, and first-workspace bootstrap
+- a server-side auth/data spine for sign-in and workspace bootstrap
+- route-aware workspace authorization and the first protected project creation/read paths
 - shared TypeScript and ESLint tooling
 - phase and architecture docs
 

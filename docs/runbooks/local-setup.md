@@ -17,7 +17,7 @@ Copy `.env.example` into your local env file and provide real Supabase values fo
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-The authenticated dashboard flow remains unproven until those values exist and your Supabase project contains at least one email/password auth user.
+The authenticated dashboard and workspace/project flows remain unproven until those values exist and your Supabase project contains at least one email/password auth user.
 
 ## Run the web shell
 
@@ -28,6 +28,15 @@ The web shell should render:
 - `/`
 - `/sign-in`
 - `/dashboard`
+
+With real auth data configured, the protected route flow should behave like this:
+
+- `/dashboard` redirects unauthenticated users to `/sign-in`
+- authenticated users with no memberships see workspace bootstrap
+- authenticated users with one workspace redirect into `/dashboard/[workspaceSlug]`
+- authenticated users with multiple workspaces see a workspace selector
+- project creation happens at `/dashboard/[workspaceSlug]/projects/new`
+- project detail reads happen at `/dashboard/[workspaceSlug]/projects/[projectSlug]`
 
 ## Run the worker shell
 
@@ -52,9 +61,9 @@ The database boundary should:
 - list the migration files in sequence order
 - validate migration naming, ordering, and non-empty content
 - replay all migrations from zero into an embedded database
-- prove the workspace bootstrap function exists and works
+- prove the workspace bootstrap and project creation functions exist and work
 
-## Run the web auth/data proof commands
+## Run the web proof commands
 
     pnpm --filter @token-launch-studio/web lint
     pnpm --filter @token-launch-studio/web typecheck
@@ -63,6 +72,6 @@ The database boundary should:
 
 ## Current status
 
-This repo now proves root tooling, web, worker, contracts, replayable database schema, and the first server-side auth/data spine.
+This repo now proves root tooling, web, worker, contracts, replayable database schema, auth spine, and the first protected workspace/project route structure.
 
-Real sign-in and dashboard membership reads still depend on valid runtime Supabase environment values.
+True end-to-end runtime behavior still depends on real Supabase credentials and seeded auth users.
