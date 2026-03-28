@@ -1,19 +1,23 @@
 import Link from "next/link";
 import { SignOutForm } from "@/components/dashboard/sign-out-form";
 import { PageShell } from "@/components/foundation/page-shell";
+import type { ProjectActivityOverview } from "@/lib/activity";
 import type { ProjectOverview } from "@/lib/projects/data";
 import {
   getWorkspaceDashboardPath,
   getWorkspaceProjectContractsPath,
   getWorkspaceProjectNewPath,
-  getWorkspaceProjectSettingsPath
+  getWorkspaceProjectSettingsPath,
+  getWorkspaceProjectTokenLaunchPath
 } from "@/lib/routing/route-paths";
 import {
   canCreateProjectsForRole,
   type WorkspaceAccessContext
 } from "@/lib/workspaces/access";
+import { ProjectActivityFeed } from "./project-activity-feed";
 
 type ProjectDetailShellProps = Readonly<{
+  activities: readonly ProjectActivityOverview[];
   project: ProjectOverview;
   statusMessage: string | null;
   workspaceAccess: WorkspaceAccessContext;
@@ -21,11 +25,12 @@ type ProjectDetailShellProps = Readonly<{
 
 const detailNotes = [
   "This route proves the protected workspace-plus-project read path.",
-  "Project settings and contract registry now live in dedicated protected sub-routes.",
-  "Project deletion is intentionally blocked while attached contracts still exist."
+  "Token launches now flow through a dedicated operator workflow route backed by worker execution.",
+  "The project feed is now normalized and records launch request and deployment lifecycle events."
 ];
 
 export function ProjectDetailShell({
+  activities,
   project,
   statusMessage,
   workspaceAccess
@@ -53,6 +58,15 @@ export function ProjectDetailShell({
             )}
           >
             Contracts
+          </Link>
+          <Link
+            className="button-link secondary"
+            href={getWorkspaceProjectTokenLaunchPath(
+              workspaceAccess.workspace.slug,
+              project.slug
+            )}
+          >
+            Token launch
           </Link>
           {canManageProject ? (
             <>
@@ -95,6 +109,7 @@ export function ProjectDetailShell({
           </li>
         </ul>
       </section>
+      <ProjectActivityFeed activities={activities} />
       <section className="placeholder-panel">
         <h2 className="placeholder-panel-title">What this route proves now</h2>
         <ul className="placeholder-list">

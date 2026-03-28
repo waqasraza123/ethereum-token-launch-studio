@@ -1,56 +1,45 @@
+import { writeFile } from "node:fs/promises";
 import hre, { network } from "hardhat";
-import { verifyContract } from "@nomicfoundation/hardhat-verify/verify";
 import {
+  getOptionalProjectTokenDeploymentResultPathFromArgv,
   getProjectTokenDeploymentConfigPathFromArgv,
   readProjectTokenDeploymentConfig
 } from "../src/config/project-token-deployment.js";
 import { recordProjectTokenDeployment } from "../src/lib/project-token-registry.js";
 
-type DeploymentReceipt = Readonly<{
-  blockNumber: number;
-}>;
-
-type DeploymentTransaction = Readonly<{
-  hash: string;
-  wait(): Promise<DeploymentReceipt | null>;
-}>;
+type HardhatRuntimeWithRun = typeof hre & {
+  run(taskName: string, options?: Record<string, unknown>): Promise<unknown>;
+};
 
 type ProjectTokenContract = {
-  waitForDeployment(): Promise<unknown>;
   getAddress(): Promise<string>;
-  deploymentTransaction(): DeploymentTransaction | null;
+  waitForDeployment(): Promise<unknown>;
+  deploymentTransaction(): {
+    hash: string;
+    wait(): Promise<{ blockNumber: number } | null>;
+  } | null;
   name(): Promise<string>;
   symbol(): Promise<string>;
-  decimals(): Promise<bigint>;
+  decimals(): Promise<bigint | number>;
   cap(): Promise<bigint>;
   totalSupply(): Promise<bigint>;
 };
 
+const hardhatRuntime = hre as HardhatRuntimeWithRun;
+
 const wait = async (delayMs: number) =>
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 
-const getRequiredValue = <T>(value: T | undefined, label: string): T => {
-  if (value === undefined) {
-    throw new Error(`Missing required value: ${label}`);
-  }
-
-  return value;
-};
-
 const verifyProjectToken = async (
   contractAddress: string,
-  constructorArgs: readonly unknown[]
+  constructorArguments: readonly unknown[]
 ) => {
   for (let attempt = 1; attempt <= 6; attempt += 1) {
     try {
-      await verifyContract(
-        {
-          address: contractAddress,
-          constructorArgs: [...constructorArgs],
-          provider: "etherscan"
-        },
-        hre
-      );
+      await hardhatRuntime.run("verify:verify", {
+        address: contractAddress,
+        constructorArgs: [...constructorArguments]
+      });
 
       return;
     } catch (error) {
@@ -72,11 +61,17 @@ const verifyProjectToken = async (
 
 const main = async () => {
   const configPath = getProjectTokenDeploymentConfigPathFromArgv();
+  const resultPath = getOptionalProjectTokenDeploymentResultPathFromArgv();
   const deploymentConfig = await readProjectTokenDeploymentConfig(configPath);
   const { ethers } = await network.connect("sepolia");
-  const deployer = getRequiredValue((await ethers.getSigners())[0], "deployer signer");
+  const signers = await ethers.getSigners();
+  const deployer = signers[0];
 
-  const constructorArgs = [
+  if (!deployer) {
+    throw new Error("Could not resolve the Sepolia deployer signer.");
+  }
+
+  const constructorArguments: unknown[] = [
     deploymentConfig.tokenName,
     deploymentConfig.tokenSymbol,
     BigInt(deploymentConfig.cap),
@@ -86,12 +81,7 @@ const main = async () => {
     deploymentConfig.mintAuthority ?? ethers.ZeroAddress
   ];
 
-  const deployedContract = await ethers.deployContract(
-    "ProjectToken",
-    constructorArgs,
-    deployer
-  );
-
+  const deployedContract = await ethers.deployContract("ProjectToken", constructorArguments);
   const token = deployedContract as unknown as ProjectTokenContract;
 
   await token.waitForDeployment();
@@ -109,7 +99,7 @@ const main = async () => {
     throw new Error("Could not read the deployment receipt for ProjectToken.");
   }
 
-  await verifyProjectToken(contractAddress, constructorArgs);
+  await verifyProjectToken(contractAddress, constructorArguments);
 
   const explorerUrl = `https://sepolia.etherscan.io/address/${contractAddress}`;
   const verificationUrl = `${explorerUrl}#code`;
@@ -148,7 +138,7 @@ const main = async () => {
     workspaceSlug: deploymentConfig.workspaceSlug
   });
 
-  console.info("project_token.deployment.succeeded", {
+  const result = {
     address: contractAddress,
     deploymentTxHash: deploymentTransaction.hash,
     projectContractId: registryRow.project_contract_id,
@@ -156,7 +146,13 @@ const main = async () => {
     tokenName,
     tokenSymbol,
     verificationUrl
-  });
+  };
+
+  if (resultPath) {
+    await writeFile(resultPath, JSON.stringify(result, null, 2) + "\n", "utf8");
+  }
+
+  console.info("project_token.deployment.succeeded", result);
 };
 
 await main();

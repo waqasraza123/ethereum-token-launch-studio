@@ -28,4 +28,9 @@ export const getWorkspaceProjectContractsPath = (
   projectSlug: string
 ): string => `${getWorkspaceProjectPath(workspaceSlug, projectSlug)}/contracts`;
 
+export const getWorkspaceProjectTokenLaunchPath = (
+  workspaceSlug: string,
+  projectSlug: string
+): string => `${getWorkspaceProjectPath(workspaceSlug, projectSlug)}/token-launch`;
+
 export type AppRouteKey = keyof typeof routePaths;

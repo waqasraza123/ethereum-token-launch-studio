@@ -52,23 +52,37 @@ export type ProjectTokenDeploymentConfig = Readonly<
   z.infer<typeof ProjectTokenDeploymentConfigSchema>
 >;
 
+const readFlagValue = (flagName: string, argv: readonly string[] = process.argv): string | null => {
+  const flagIndex = argv.indexOf(flagName);
+
+  if (flagIndex === -1) {
+    return null;
+  }
+
+  const nextValue = argv[flagIndex + 1];
+
+  if (!nextValue) {
+    throw new Error(`Missing value for ${flagName}.`);
+  }
+
+  return nextValue;
+};
+
 export const getProjectTokenDeploymentConfigPathFromArgv = (
   argv: readonly string[] = process.argv
 ): string => {
-  const flagIndex = argv.indexOf("--config");
+  const configPath = readFlagValue("--config", argv);
 
-  if (flagIndex === -1) {
-    throw new Error("Missing required --config <path> argument.");
-  }
-
-  const configPath = argv[flagIndex + 1];
-
-  if (typeof configPath !== "string" || configPath.trim() === "") {
+  if (!configPath) {
     throw new Error("Missing required --config <path> argument.");
   }
 
   return configPath;
 };
+
+export const getOptionalProjectTokenDeploymentResultPathFromArgv = (
+  argv: readonly string[] = process.argv
+): string | null => readFlagValue("--result-file", argv);
 
 export const readProjectTokenDeploymentConfig = async (
   configPath: string

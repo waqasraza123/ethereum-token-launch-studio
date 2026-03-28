@@ -83,6 +83,13 @@ importers:
         version: 5.8.3
 
   apps/worker:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: 2.100.1
+        version: 2.100.1
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
     devDependencies:
       '@types/node':
         specifier: 25.5.0

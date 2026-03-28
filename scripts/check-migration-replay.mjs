@@ -39,9 +39,38 @@ try {
     )
   `);
 
+  const launchRequestResult = await database.query(`
+    select *
+    from app_public.create_project_token_launch_request(
+      '50000000-0000-0000-0000-000000000001',
+      '30000000-0000-0000-0000-000000000001',
+      'Alpha Token',
+      'Alpha Token',
+      'ALPHA',
+      1000000000000000000000000,
+      250000000000000000000000,
+      '0x1111111111111111111111111111111111111111',
+      '0x1111111111111111111111111111111111111111',
+      null,
+      'Replay launch request'
+    )
+  `);
+
   await setReplayServiceRole(database);
 
-  const registryResult = await database.query(`
+  const claimedRequestResult = await database.query(`
+    select *
+    from app_public.claim_next_project_token_launch_request('worker-1')
+  `);
+
+  await database.query(`
+    select app_public.mark_project_token_launch_request_started(
+      '50000000-0000-0000-0000-000000000001',
+      'worker-1'
+    )
+  `);
+
+  await database.query(`
     select *
     from app_public.record_project_token_deployment(
       '40000000-0000-0000-0000-000000000001',
@@ -71,17 +100,31 @@ try {
     )
   `);
 
+  await database.query(`
+    select app_public.mark_project_token_launch_request_succeeded(
+      '50000000-0000-0000-0000-000000000001',
+      'worker-1',
+      '40000000-0000-0000-0000-000000000001',
+      '0x1111111111111111111111111111111111111111',
+      '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      'https://sepolia.etherscan.io/address/0x1111111111111111111111111111111111111111#code'
+    )
+  `);
+
   await setReplayAuthenticatedUser(database, firstUserId);
 
   const visibleCountsResult = await database.query(`
     select
+      (select count(*)::int from app_public.project_token_launch_requests) as launch_request_count,
+      (select count(*)::int from app_public.project_activities) as activity_count,
       (select count(*)::int from app_public.project_contracts) as project_contract_count,
       (select count(*)::int from app_public.project_token_deployments) as project_token_deployment_count
   `);
 
   console.info("supabase.migrations.replay_valid", {
+    claimedRequest: claimedRequestResult.rows[0],
+    createdLaunchRequest: launchRequestResult.rows[0],
     latestMigration: manifest.at(-1)?.filename ?? null,
-    recordedDeployment: registryResult.rows[0],
     visibleCounts: visibleCountsResult.rows[0]
   });
 } finally {

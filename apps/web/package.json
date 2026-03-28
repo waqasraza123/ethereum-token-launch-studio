@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev --turbopack",
     "lint": "eslint . --max-warnings=0",
-    "test": "node --import tsx --test src/lib/routing/route-paths.test.ts src/lib/env/public.test.ts src/lib/env/server.test.ts src/lib/workspaces/bootstrap-input.test.ts src/lib/workspaces/access.test.ts src/lib/projects/input.test.ts",
+    "test": "node --import tsx --test src/lib/routing/route-paths.test.ts src/lib/env/public.test.ts src/lib/env/server.test.ts src/lib/workspaces/bootstrap-input.test.ts src/lib/workspaces/access.test.ts src/lib/projects/input.test.ts src/lib/token-launch/input.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

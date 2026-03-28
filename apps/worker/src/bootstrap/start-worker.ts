@@ -1,56 +1,26 @@
-import process from "node:process";
 import { readWorkerEnvironment } from "../config/env.js";
-import { createWorkerRuntime } from "../core/worker-runtime.js";
+import { startProjectTokenLaunchProcessor } from "../features/project-token-launch/process-launch-requests.js";
 
-const shutdownSignals = ["SIGINT", "SIGTERM"] as const;
-
-const waitForShutdownSignal = (): Promise<NodeJS.Signals> =>
-  new Promise((resolve) => {
-    const cleanup = () => {
-      for (const signal of shutdownSignals) {
-        const handler = signalHandlers[signal];
-        process.off(signal, handler);
-      }
-    };
-
-    const signalHandlers: Record<(typeof shutdownSignals)[number], () => void> = {
-      SIGINT: () => {
-        cleanup();
-        resolve("SIGINT");
-      },
-      SIGTERM: () => {
-        cleanup();
-        resolve("SIGTERM");
-      },
-    };
-
-    for (const signal of shutdownSignals) {
-      process.on(signal, signalHandlers[signal]);
-    }
-  });
-
-export const startWorker = async (): Promise<void> => {
+export const startWorker = async () => {
   const environment = readWorkerEnvironment();
-  const runtime = createWorkerRuntime(environment);
+  const processor = await startProjectTokenLaunchProcessor(environment);
 
-  await runtime.start();
-
-  const receivedSignal = await waitForShutdownSignal();
-
-  console.info("worker.shell.shutdown_requested", {
-    signal: receivedSignal,
+  console.info("worker.shell.ready", {
+    tokenLaunchPollIntervalMs: environment.TOKEN_LAUNCH_POLL_INTERVAL_MS,
+    workerId: processor.workerId
   });
 
-  const forcedExitTimer = setTimeout(() => {
-    console.error("worker.shell.shutdown_timeout", {
-      timeoutMs: environment.shutdownTimeoutMs,
-    });
-    process.exit(1);
-  }, environment.shutdownTimeoutMs);
+  const shutdown = async (signal: string) => {
+    console.info("worker.shutdown.requested", { signal, workerId: processor.workerId });
+    await processor.stop();
+    process.exit(0);
+  };
 
-  try {
-    await runtime.stop();
-  } finally {
-    clearTimeout(forcedExitTimer);
-  }
+  process.on("SIGINT", () => {
+    void shutdown("SIGINT");
+  });
+
+  process.on("SIGTERM", () => {
+    void shutdown("SIGTERM");
+  });
 };

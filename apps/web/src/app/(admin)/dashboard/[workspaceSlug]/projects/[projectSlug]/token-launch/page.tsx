@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
-import { ProjectDetailShell } from "@/components/projects/project-detail-shell";
+import { ProjectTokenLaunchShell } from "@/components/projects/project-token-launch-shell";
 import { listProjectActivities } from "@/lib/activity";
 import { requireCurrentUser } from "@/lib/auth/session";
 import { getProjectBySlug } from "@/lib/projects/data";
+import { listProjectTokenLaunchRequests } from "@/lib/token-launch/requests";
 import { getWorkspaceAccessBySlug } from "@/lib/workspaces/access";
 
 export const dynamic = "force-dynamic";
 
-type ProjectDetailPageProps = Readonly<{
+type ProjectTokenLaunchPageProps = Readonly<{
   params: Promise<{
     projectSlug: string;
     workspaceSlug: string;
@@ -28,10 +29,10 @@ const readSingleSearchParam = (
   return value ?? null;
 };
 
-export default async function ProjectDetailPage({
+export default async function ProjectTokenLaunchPage({
   params,
   searchParams
-}: ProjectDetailPageProps) {
+}: ProjectTokenLaunchPageProps) {
   await requireCurrentUser();
 
   const resolvedParams = await params;
@@ -51,18 +52,21 @@ export default async function ProjectDetailPage({
     notFound();
   }
 
-  const activities = await listProjectActivities(project.id, 15);
+  const requests = await listProjectTokenLaunchRequests(project.id);
+  const activities = await listProjectActivities(project.id, 25);
+
+  const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
   const statusMessage =
-    readSingleSearchParam(resolvedSearchParams, "created") === "1"
-      ? "Project created successfully."
-      : readSingleSearchParam(resolvedSearchParams, "updated") === "1"
-        ? "Project updated successfully."
-        : null;
+    readSingleSearchParam(resolvedSearchParams, "queued") === "1"
+      ? "Project token launch request queued successfully."
+      : null;
 
   return (
-    <ProjectDetailShell
+    <ProjectTokenLaunchShell
       activities={activities}
+      errorMessage={errorMessage}
       project={project}
+      requests={requests}
       statusMessage={statusMessage}
       workspaceAccess={workspaceAccess}
     />

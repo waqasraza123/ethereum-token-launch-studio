@@ -7,6 +7,7 @@ import {
   getWorkspaceProjectNewPath,
   getWorkspaceProjectPath,
   getWorkspaceProjectSettingsPath,
+  getWorkspaceProjectTokenLaunchPath,
   routePaths
 } from "./route-paths.js";
 
@@ -36,5 +37,9 @@ test("workspace route helpers build the expected paths", () => {
   assert.equal(
     getWorkspaceProjectContractsPath("studio-alpha", "alpha-launch"),
     "/dashboard/studio-alpha/projects/alpha-launch/contracts"
+  );
+  assert.equal(
+    getWorkspaceProjectTokenLaunchPath("studio-alpha", "alpha-launch"),
+    "/dashboard/studio-alpha/projects/alpha-launch/token-launch"
   );
 });
