@@ -9,28 +9,17 @@
 
     pnpm install
 
-## Configure auth environment
+## Configure environment
 
-Copy `.env.example` into your local env file and provide real Supabase values for:
+Copy `.env.example` into your local env file and provide real values for:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-
-The protected admin surface reads through the authenticated session client, so real runtime proof still depends on valid session cookies and a real Supabase project.
-
-## Run the web shell
-
-    pnpm dev:web
-
-With real auth data configured, the protected route flow should behave like this:
-
-- `/dashboard` redirects unauthenticated users to `/sign-in`
-- authenticated users with one workspace redirect into `/dashboard/[workspaceSlug]`
-- `/dashboard/[workspaceSlug]/projects/[projectSlug]/settings` allows only owner and ops_manager to edit or delete
-- `/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts` lists attached contracts for authorized members
-- only owner and ops_manager can attach or detach contracts
-- project deletion is blocked until attached contracts are removed
+- `SEPOLIA_RPC_URL`
+- `SEPOLIA_PRIVATE_KEY`
+- `ETHERSCAN_API_KEY`
 
 ## Run the database proof commands
 
@@ -38,20 +27,39 @@ With real auth data configured, the protected route flow should behave like this
     pnpm db:validate
     pnpm db:replay:check
 
-The database boundary should:
+## Run the contracts proof commands
 
-- list the migration files in sequence order
-- validate migration naming, ordering, and non-empty content
-- replay all migrations from zero into an embedded database
-- prove project update, attachment, detachment, and deletion safeguards
+    pnpm contracts:compile
+    pnpm contracts:test
 
-## Run the web proof commands
+## Deploy a real Sepolia token for an existing project
 
-    pnpm --filter @token-launch-studio/web lint
-    pnpm --filter @token-launch-studio/web typecheck
-    pnpm --filter @token-launch-studio/web test
-    pnpm --filter @token-launch-studio/web build
+Prepare a deployment config file by copying:
 
-## Current status
+- `packages/contracts/deployments/project-token.sepolia.example.json`
 
-This repo now proves root tooling, web, worker, contracts, replayable schema evolution, protected session-backed admin reads, multi-user workspace management, protected project lifecycle operations, and the first contract registry attachment flow.
+Then run:
+
+    pnpm contracts:deploy:project-token -- --config packages/contracts/deployments/project-token.sepolia.example.json
+
+The script should:
+
+- deploy `ProjectToken` to Sepolia
+- verify the contract on Etherscan
+- write the verified deployment into `project_contracts`
+- write token-specific metadata into `project_token_deployments`
+
+## Validate the admin app surface
+
+After a successful deployment, open:
+
+- `/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts`
+
+The new token should appear there immediately with:
+
+- generic contract registry data
+- token name and symbol
+- cap and initial supply
+- deployment transaction hash
+- deployer address
+- verification link

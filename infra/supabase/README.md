@@ -11,44 +11,21 @@ This directory exists to lock the database infrastructure boundary before app-si
 - `migrations/0004_phase_2_workspace_project_flows.sql` for role-aware project creation
 - `migrations/0005_phase_2_rls_and_session_reads.sql` for RLS hardening and session-backed reads
 - `migrations/0006_phase_2_membership_management.sql` for member listing and owner-only membership changes
-- `migrations/0007_phase_2_project_context_and_contract_registry.sql` for project editing deletion and contract attachment
+- `migrations/0007_phase_2_project_context_and_contract_registry.sql` for project editing deletion and generic contract attachment
+- `migrations/0008_phase_3_project_token_deployment_bridge.sql` for verified project token deployment metadata and contracts-workspace registry writes
 
 ## Current migration scope
 
-### `0001_phase_1_baseline.sql`
-Creates only schema boundaries:
-- `app_public`
-- `app_private`
-- `app_audit`
+### `0008_phase_3_project_token_deployment_bridge.sql`
 
-### `0002_phase_2_core_business_schema.sql`
-Creates the first business tables and database-side support behavior:
-- `app_public.workspaces`
-- `app_public.workspace_members`
-- `app_public.projects`
+This migration adds the first contract-workspace-to-admin bridge:
 
-### `0003_phase_2_auth_workspace_bootstrap.sql`
-Creates the authenticated workspace bootstrap function.
-
-### `0004_phase_2_workspace_project_flows.sql`
-Creates the role-aware project creation function.
-
-### `0005_phase_2_rls_and_session_reads.sql`
-Hardens the protected admin data surface with RLS and session-backed reads.
-
-### `0006_phase_2_membership_management.sql`
-Adds the first multi-user workspace membership management layer.
-
-### `0007_phase_2_project_context_and_contract_registry.sql`
-Finishes the protected project context backbone:
-- `app_public.update_project(...)`
-- `app_public.delete_project(...)`
-- `app_public.project_contracts`
-- `app_public.attach_project_contract(...)`
-- `app_public.detach_project_contract(...)`
-- `app_private.is_project_visible(...)`
-- project contract RLS policy
-- deletion safeguard requiring detached contracts before project deletion
+- `app_public.project_token_deployments`
+- token-specific verified deployment metadata
+- select RLS policy for token deployment metadata
+- `app_private.is_project_contract_visible(...)`
+- `app_public.record_project_token_deployment(...)`
+- service-role-only deployment recording into both `project_contracts` and `project_token_deployments`
 
 ## Current proof commands
 
@@ -58,8 +35,7 @@ Finishes the protected project context backbone:
 
 ## What is intentionally deferred
 
-- local Supabase runtime workflows
-- deployment automation into the contract registry
-- ABI storage and decoding strategy
-- activity tables
-- seed data
+- automatic ABI storage
+- automated deployment verification status syncing
+- indexer or event ingestion off registered contracts
+- deployment rollback tooling

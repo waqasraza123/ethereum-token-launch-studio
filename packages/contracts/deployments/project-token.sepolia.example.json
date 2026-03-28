@@ -1,0 +1,13 @@
+{
+  "workspaceSlug": "studio-alpha",
+  "projectSlug": "alpha-launch",
+  "registryLabel": "Alpha Token",
+  "tokenName": "Alpha Token",
+  "tokenSymbol": "ALPHA",
+  "cap": "1000000000000000000000000",
+  "initialSupply": "250000000000000000000000",
+  "adminAddress": "0x0000000000000000000000000000000000000001",
+  "initialRecipient": "0x0000000000000000000000000000000000000001",
+  "mintAuthority": null,
+  "notes": "Initial Sepolia deployment for the Alpha project token."
+}

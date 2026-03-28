@@ -27,6 +27,7 @@ const requiredPaths = [
   "docs/phases/phase-2-rls-and-session-reads.md",
   "docs/phases/phase-2-membership-management.md",
   "docs/phases/phase-2-project-context-and-contract-registry.md",
+  "docs/phases/phase-3-project-token-deployment-bridge.md",
   "docs/runbooks/local-setup.md",
   "scripts/workspace-foundation.test.mjs",
   "scripts/supabase-migrations.test.mjs",
@@ -55,12 +56,34 @@ const requiredPaths = [
   "apps/web/src/lib/contracts/registry.ts",
   "apps/web/src/lib/projects/input.ts",
   "apps/web/src/lib/routing/route-paths.ts",
-  "infra/supabase/migrations/0007_phase_2_project_context_and_contract_registry.sql"
+  "packages/contracts/package.json",
+  "packages/contracts/tsconfig.json",
+  "packages/contracts/hardhat.config.ts",
+  "packages/contracts/contracts/foundation/Phase1Sentinel.sol",
+  "packages/contracts/contracts/tokens/ProjectToken.sol",
+  "packages/contracts/test/Phase1Sentinel.test.ts",
+  "packages/contracts/test/ProjectToken.test.ts",
+  "packages/contracts/scripts/print-accounts.ts",
+  "packages/contracts/scripts/deploy-project-token.ts",
+  "packages/contracts/src/config/project-token-deployment.ts",
+  "packages/contracts/src/lib/project-token-registry.ts",
+  "packages/contracts/deployments/project-token.sepolia.example.json",
+  "infra/supabase/README.md",
+  "infra/supabase/config.toml",
+  "infra/supabase/migrations/0001_phase_1_baseline.sql",
+  "infra/supabase/migrations/0002_phase_2_core_business_schema.sql",
+  "infra/supabase/migrations/0003_phase_2_auth_workspace_bootstrap.sql",
+  "infra/supabase/migrations/0004_phase_2_workspace_project_flows.sql",
+  "infra/supabase/migrations/0005_phase_2_rls_and_session_reads.sql",
+  "infra/supabase/migrations/0006_phase_2_membership_management.sql",
+  "infra/supabase/migrations/0007_phase_2_project_context_and_contract_registry.sql",
+  "infra/supabase/migrations/0008_phase_3_project_token_deployment_bridge.sql"
 ];
 
 const requiredRootScripts = [
   "build",
   "contracts:compile",
+  "contracts:deploy:project-token",
   "contracts:test",
   "db:list",
   "db:replay:check",
@@ -92,7 +115,15 @@ const requiredPackageDefinitions = [
   {
     path: "packages/contracts/package.json",
     name: "@token-launch-studio/contracts",
-    scripts: ["accounts", "build", "compile", "lint", "test", "typecheck"]
+    scripts: [
+      "accounts",
+      "build",
+      "compile",
+      "deploy:project-token",
+      "lint",
+      "test",
+      "typecheck"
+    ]
   }
 ];
 

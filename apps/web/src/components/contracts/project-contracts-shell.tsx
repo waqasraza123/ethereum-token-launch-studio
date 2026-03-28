@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SignOutForm } from "@/components/dashboard/sign-out-form";
 import { PageShell } from "@/components/foundation/page-shell";
+import type { ProjectContractOverview } from "@/lib/contracts/registry";
 import type { ProjectOverview } from "@/lib/projects/data";
 import {
   getWorkspaceDashboardPath,
@@ -11,7 +12,6 @@ import {
   canCreateProjectsForRole,
   type WorkspaceAccessContext
 } from "@/lib/workspaces/access";
-import type { ProjectContractOverview } from "@/lib/contracts/registry";
 import { ProjectContractAttachForm } from "./project-contract-attach-form";
 import { ProjectContractDetachForm } from "./project-contract-detach-form";
 
@@ -26,7 +26,7 @@ type ProjectContractsShellProps = Readonly<{
 const contractRegistryNotes = [
   "All authorized workspace members can view attached contracts.",
   "Only owner and ops_manager can attach or detach contracts.",
-  "Project deletion is blocked until the contract registry for that project is empty."
+  "Verified Sepolia token deployments now appear here as soon as the deployment script records them."
 ];
 
 export function ProjectContractsShell({
@@ -42,7 +42,7 @@ export function ProjectContractsShell({
     <PageShell
       eyebrow="Project contracts"
       title={`Contracts for ${project.name}.`}
-      description="This is the first project-to-contract attachment flow and contract registry surface inside the admin app."
+      description="This route now shows both generic contract registry rows and token-specific verified deployment metadata."
       actions={
         <div className="page-shell-actions">
           <Link
@@ -90,8 +90,7 @@ export function ProjectContractsShell({
       <section className="placeholder-panel">
         <h2 className="placeholder-panel-title">Attached contracts</h2>
         <p className="placeholder-panel-description">
-          Contract records are now linked directly to the current project and can later power
-          deployment history, explorer links, and contract-aware admin modules.
+          Verified token deployments written by the contracts workspace now land here immediately.
         </p>
         {contracts.length === 0 ? (
           <p className="placeholder-panel-description">
@@ -103,15 +102,74 @@ export function ProjectContractsShell({
               <li className="dashboard-list-item" key={contract.id}>
                 <h3 className="dashboard-list-title">{contract.label}</h3>
                 <p className="dashboard-list-meta">Kind: {contract.contractKind}</p>
-                <p className="dashboard-list-meta">Environment: {contract.deploymentEnvironment}</p>
+                <p className="dashboard-list-meta">
+                  Environment: {contract.deploymentEnvironment}
+                </p>
                 <p className="dashboard-list-meta">Chain ID: {contract.chainId}</p>
                 <p className="dashboard-list-meta">Address: {contract.address}</p>
                 <p className="dashboard-list-meta">
                   {contract.notes ?? "No notes recorded yet."}
                 </p>
+                {contract.projectTokenDeployment ? (
+                  <div className="field-grid">
+                    <p className="dashboard-list-meta">
+                      Token: {contract.projectTokenDeployment.tokenName} (
+                      {contract.projectTokenDeployment.tokenSymbol})
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Decimals: {contract.projectTokenDeployment.decimals}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Cap: {contract.projectTokenDeployment.cap}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Initial supply: {contract.projectTokenDeployment.initialSupply}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Admin: {contract.projectTokenDeployment.adminAddress}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Initial recipient: {contract.projectTokenDeployment.initialRecipient}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Mint authority:{" "}
+                      {contract.projectTokenDeployment.mintAuthority ?? "disabled"}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Deployment tx: {contract.projectTokenDeployment.deploymentTxHash}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Block: {contract.projectTokenDeployment.deployedBlockNumber}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Deployer: {contract.projectTokenDeployment.deployerAddress}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Verification: {contract.projectTokenDeployment.verificationProvider}
+                    </p>
+                    <p className="dashboard-list-meta">
+                      Verified at: {contract.projectTokenDeployment.verifiedAt}
+                    </p>
+                    <div className="page-shell-actions">
+                      <a
+                        className="button-link secondary"
+                        href={contract.projectTokenDeployment.verificationUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Open verified source
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
                 {contract.explorerUrl ? (
                   <div className="page-shell-actions">
-                    <a className="button-link secondary" href={contract.explorerUrl} rel="noreferrer" target="_blank">
+                    <a
+                      className="button-link secondary"
+                      href={contract.explorerUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
                       Open explorer
                     </a>
                   </div>

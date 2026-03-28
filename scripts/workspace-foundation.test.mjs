@@ -19,6 +19,7 @@ test("root package metadata is locked", async () => {
   assert.deepEqual(Object.keys(packageJson.scripts).sort(), [
     "build",
     "contracts:compile",
+    "contracts:deploy:project-token",
     "contracts:test",
     "db:list",
     "db:replay:check",
@@ -51,29 +52,32 @@ test("web worker and contracts workspace manifests are present", async () => {
   assert.equal(contractsPackageJson.name, "@token-launch-studio/contracts");
 });
 
-test("project settings and contract registry route files exist", async () => {
+test("project token deployment bridge files exist", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/settings/actions.ts")
+    readTextFile("packages/contracts/contracts/tokens/ProjectToken.sol")
   );
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/settings/page.tsx")
+    readTextFile("packages/contracts/scripts/deploy-project-token.ts")
   );
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts/actions.ts")
+    readTextFile("packages/contracts/src/config/project-token-deployment.ts")
   );
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts/page.tsx")
+    readTextFile("packages/contracts/src/lib/project-token-registry.ts")
   );
-});
-
-test("infra boundary includes the project context and contract registry migration", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("infra/supabase/migrations/0007_phase_2_project_context_and_contract_registry.sql")
+    readTextFile("packages/contracts/deployments/project-token.sepolia.example.json")
   );
 });
 
-test("phase docs exist for project context and contract registry", async () => {
+test("infra boundary includes the project token deployment bridge migration", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("docs/phases/phase-2-project-context-and-contract-registry.md")
+    readTextFile("infra/supabase/migrations/0008_phase_3_project_token_deployment_bridge.sql")
+  );
+});
+
+test("phase docs exist for the deployment bridge", async () => {
+  await assert.doesNotReject(async () =>
+    readTextFile("docs/phases/phase-3-project-token-deployment-bridge.md")
   );
 });

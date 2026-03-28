@@ -1,4 +1,4 @@
-import { defineConfig } from "hardhat/config";
+import { configVariable, defineConfig } from "hardhat/config";
 import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
 export default defineConfig({
@@ -7,9 +7,7 @@ export default defineConfig({
     artifacts: "./artifacts",
     cache: "./cache",
     sources: "./contracts",
-    tests: {
-      mocha: "./test",
-    },
+    tests: "./test"
   },
   solidity: {
     version: "0.8.28",
@@ -17,23 +15,35 @@ export default defineConfig({
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
-      },
-    },
+        runs: 200
+      }
+    }
   },
   networks: {
     hardhatMainnet: {
       type: "edr-simulated",
-      chainType: "l1",
+      chainType: "l1"
     },
+    sepolia: {
+      type: "http",
+      chainType: "l1",
+      chainId: 11155111,
+      url: configVariable("SEPOLIA_RPC_URL"),
+      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")]
+    }
+  },
+  verify: {
+    etherscan: {
+      apiKey: configVariable("ETHERSCAN_API_KEY")
+    }
   },
   test: {
     mocha: {
-      timeout: 20_000,
-    },
+      timeout: 20_000
+    }
   },
   typechain: {
     alwaysGenerateOverloads: false,
-    outDir: "./types",
-  },
+    outDir: "./types"
+  }
 });

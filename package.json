@@ -20,7 +20,8 @@
     "lint": "eslint . --max-warnings=0 && turbo run lint",
     "test": "node --test scripts/workspace-foundation.test.mjs scripts/supabase-migrations.test.mjs && turbo run test",
     "typecheck": "tsc --showConfig -p tooling/typescript/node.json > /dev/null && tsc --showConfig -p tooling/typescript/nextjs.json > /dev/null && turbo run typecheck",
-    "validate:foundation": "node scripts/verify-workspace-foundation.mjs"
+    "validate:foundation": "node scripts/verify-workspace-foundation.mjs",
+    "contracts:deploy:project-token": "pnpm --filter @token-launch-studio/contracts deploy:project-token"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.4.1",

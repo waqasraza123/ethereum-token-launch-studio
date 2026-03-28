@@ -18,10 +18,11 @@ This repo currently includes:
 - owner-only workspace membership management
 - protected project editing and deletion
 - the first project-to-contract registry attachment flow
+- a real Sepolia project token deployment bridge into the registry
 - shared TypeScript and ESLint tooling
 - phase and architecture docs
 
-This repo does not yet include deployment automation into the contract registry, token product logic, sale logic, or app-side blockchain integration.
+This repo does not yet include deployment automation for non-token contract kinds, token sale logic, claim logic, or admin-side launch-job orchestration.
 
 ## Install
 
@@ -32,6 +33,11 @@ This repo does not yet include deployment automation into the contract registry,
     pnpm db:list
     pnpm db:validate
     pnpm db:replay:check
+
+## Contracts verification
+
+    pnpm contracts:compile
+    pnpm contracts:test
 
 ## Web verification
 

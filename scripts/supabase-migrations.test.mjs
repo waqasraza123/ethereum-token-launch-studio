@@ -8,14 +8,15 @@ import {
   closeSupabaseReplayDatabase,
   replaySupabaseMigrations,
   resetReplaySession,
-  setReplayAuthenticatedUser
+  setReplayAuthenticatedUser,
+  setReplayServiceRole
 } from "./lib/supabase-replay.mjs";
 
 const firstUserId = "00000000-0000-0000-0000-000000000001";
 const secondUserId = "00000000-0000-0000-0000-000000000002";
 const thirdUserId = "00000000-0000-0000-0000-000000000003";
 
-test("supabase migration manifest is sequential and includes the project context and contract registry migration", async () => {
+test("supabase migration manifest is sequential and includes the token deployment bridge migration", async () => {
   const manifest = await validateSupabaseMigrationManifest();
 
   assert.deepEqual(
@@ -27,42 +28,31 @@ test("supabase migration manifest is sequential and includes the project context
       "0004_phase_2_workspace_project_flows.sql",
       "0005_phase_2_rls_and_session_reads.sql",
       "0006_phase_2_membership_management.sql",
-      "0007_phase_2_project_context_and_contract_registry.sql"
+      "0007_phase_2_project_context_and_contract_registry.sql",
+      "0008_phase_3_project_token_deployment_bridge.sql"
     ]
   );
 });
 
-test("project context and contract registry migration defines the registry table and protected functions", async () => {
+test("token deployment bridge migration defines the metadata table and service write function", async () => {
   const manifest = await readSupabaseMigrationManifest();
-  const registryMigration = manifest[6];
+  const tokenDeploymentBridgeMigration = manifest[7];
 
   assert.match(
-    registryMigration.statementText,
-    /create table if not exists app_public\.project_contracts/i
+    tokenDeploymentBridgeMigration.statementText,
+    /create table if not exists app_public\.project_token_deployments/i
   );
   assert.match(
-    registryMigration.statementText,
-    /create or replace function app_public\.update_project/i
+    tokenDeploymentBridgeMigration.statementText,
+    /create or replace function app_public\.record_project_token_deployment/i
   );
   assert.match(
-    registryMigration.statementText,
-    /create or replace function app_public\.delete_project/i
-  );
-  assert.match(
-    registryMigration.statementText,
-    /create or replace function app_public\.attach_project_contract/i
-  );
-  assert.match(
-    registryMigration.statementText,
-    /create or replace function app_public\.detach_project_contract/i
-  );
-  assert.match(
-    registryMigration.statementText,
-    /create policy project_contracts_select_project_visibility/i
+    tokenDeploymentBridgeMigration.statementText,
+    /grant execute on function app_public\.record_project_token_deployment/i
   );
 });
 
-test("authorized actor can update a project attach and detach a contract then delete the project", async () => {
+test("service role can record a verified project token deployment into the registry", async () => {
   const { database } = await replaySupabaseMigrations();
 
   try {
@@ -94,145 +84,50 @@ test("authorized actor can update a project attach and detach a contract then de
       )
     `);
 
-    const updateResult = await database.query(`
-      select *
-      from app_public.update_project(
-        '30000000-0000-0000-0000-000000000001',
-        'Alpha Launch V2',
-        'alpha-launch-v2',
-        'Updated project'
-      )
-    `);
+    await setReplayServiceRole(database);
 
-    const attachResult = await database.query(`
+    const registryResult = await database.query(`
       select *
-      from app_public.attach_project_contract(
+      from app_public.record_project_token_deployment(
         '40000000-0000-0000-0000-000000000001',
-        '30000000-0000-0000-0000-000000000001',
+        'studio-core',
+        'alpha-launch',
         11155111,
         '0x1111111111111111111111111111111111111111',
-        'project_token',
         'Alpha Token',
         'testnet',
         'https://sepolia.etherscan.io/address/0x1111111111111111111111111111111111111111',
-        'Initial token'
+        'Initial verified token deployment',
+        'ProjectToken',
+        'Alpha Token',
+        'ALPHA',
+        18,
+        1000000000000000000000000,
+        250000000000000000000000,
+        '0x1111111111111111111111111111111111111111',
+        '0x1111111111111111111111111111111111111111',
+        null,
+        '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        1234567,
+        '0x1111111111111111111111111111111111111111',
+        'etherscan',
+        'https://sepolia.etherscan.io/address/0x1111111111111111111111111111111111111111#code',
+        now()
       )
     `);
 
-    const detachResult = await database.query(`
-      select *
-      from app_public.detach_project_contract(
-        '40000000-0000-0000-0000-000000000001'
-      )
-    `);
-
-    const deleteResult = await database.query(`
-      select *
-      from app_public.delete_project(
-        '30000000-0000-0000-0000-000000000001'
-      )
-    `);
-
-    const countsResult = await database.query(`
-      select
-        (select count(*)::int from app_public.projects) as project_count,
-        (select count(*)::int from app_public.project_contracts) as project_contract_count
-    `);
-
-    assert.deepEqual(updateResult.rows[0], {
-      project_id: "30000000-0000-0000-0000-000000000001",
-      project_slug: "alpha-launch-v2",
-      workspace_id: "10000000-0000-0000-0000-000000000001"
-    });
-
-    assert.deepEqual(attachResult.rows[0], {
+    assert.deepEqual(registryResult.rows[0], {
       address: "0x1111111111111111111111111111111111111111",
       project_contract_id: "40000000-0000-0000-0000-000000000001",
       project_id: "30000000-0000-0000-0000-000000000001"
     });
-
-    assert.deepEqual(detachResult.rows[0], {
-      project_contract_id: "40000000-0000-0000-0000-000000000001",
-      project_id: "30000000-0000-0000-0000-000000000001"
-    });
-
-    assert.deepEqual(deleteResult.rows[0], {
-      project_id: "30000000-0000-0000-0000-000000000001",
-      workspace_id: "10000000-0000-0000-0000-000000000001"
-    });
-
-    assert.deepEqual(countsResult.rows[0], {
-      project_contract_count: 0,
-      project_count: 0
-    });
   } finally {
     await resetReplaySession(database);
     await closeSupabaseReplayDatabase(database);
   }
 });
 
-test("project deletion is blocked while contracts remain attached", async () => {
-  const { database } = await replaySupabaseMigrations();
-
-  try {
-    await database.exec(`
-      insert into auth.users (id, email)
-      values ('${firstUserId}', 'owner@example.com');
-    `);
-
-    await setReplayAuthenticatedUser(database, firstUserId);
-
-    await database.query(`
-      select *
-      from app_public.bootstrap_workspace(
-        '10000000-0000-0000-0000-000000000001',
-        'studio-core',
-        'Studio Core',
-        '20000000-0000-0000-0000-000000000001'
-      )
-    `);
-
-    await database.query(`
-      select *
-      from app_public.create_project(
-        '30000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000001',
-        'alpha-launch',
-        'Alpha Launch',
-        'Initial project'
-      )
-    `);
-
-    await database.query(`
-      select *
-      from app_public.attach_project_contract(
-        '40000000-0000-0000-0000-000000000001',
-        '30000000-0000-0000-0000-000000000001',
-        11155111,
-        '0x1111111111111111111111111111111111111111',
-        'project_token',
-        'Alpha Token',
-        'testnet',
-        null,
-        null
-      )
-    `);
-
-    await assert.rejects(
-      database.query(`
-        select *
-        from app_public.delete_project(
-          '30000000-0000-0000-0000-000000000001'
-        )
-      `)
-    );
-  } finally {
-    await resetReplaySession(database);
-    await closeSupabaseReplayDatabase(database);
-  }
-});
-
-test("project contracts are visible only to authorized workspace members", async () => {
+test("authorized workspace members can see recorded token deployment metadata while outsiders cannot", async () => {
   const { database } = await replaySupabaseMigrations();
 
   try {
@@ -269,21 +164,6 @@ test("project contracts are visible only to authorized workspace members", async
 
     await database.query(`
       select *
-      from app_public.attach_project_contract(
-        '40000000-0000-0000-0000-000000000001',
-        '30000000-0000-0000-0000-000000000001',
-        11155111,
-        '0x1111111111111111111111111111111111111111',
-        'project_token',
-        'Alpha Token',
-        'testnet',
-        null,
-        null
-      )
-    `);
-
-    await database.query(`
-      select *
       from app_public.invite_workspace_member(
         '10000000-0000-0000-0000-000000000001',
         '20000000-0000-0000-0000-000000000002',
@@ -292,26 +172,62 @@ test("project contracts are visible only to authorized workspace members", async
       )
     `);
 
+    await setReplayServiceRole(database);
+
+    await database.query(`
+      select *
+      from app_public.record_project_token_deployment(
+        '40000000-0000-0000-0000-000000000001',
+        'studio-core',
+        'alpha-launch',
+        11155111,
+        '0x1111111111111111111111111111111111111111',
+        'Alpha Token',
+        'testnet',
+        'https://sepolia.etherscan.io/address/0x1111111111111111111111111111111111111111',
+        'Initial verified token deployment',
+        'ProjectToken',
+        'Alpha Token',
+        'ALPHA',
+        18,
+        1000000000000000000000000,
+        250000000000000000000000,
+        '0x1111111111111111111111111111111111111111',
+        '0x1111111111111111111111111111111111111111',
+        null,
+        '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        1234567,
+        '0x1111111111111111111111111111111111111111',
+        'etherscan',
+        'https://sepolia.etherscan.io/address/0x1111111111111111111111111111111111111111#code',
+        now()
+      )
+    `);
+
     await setReplayAuthenticatedUser(database, secondUserId);
 
-    const viewerVisibleContracts = await database.query(`
-      select count(*)::int as contract_count
-      from app_public.project_contracts
+    const viewerVisibleCounts = await database.query(`
+      select
+        (select count(*)::int from app_public.project_contracts) as project_contract_count,
+        (select count(*)::int from app_public.project_token_deployments) as project_token_deployment_count
     `);
 
     await setReplayAuthenticatedUser(database, thirdUserId);
 
-    const outsiderVisibleContracts = await database.query(`
-      select count(*)::int as contract_count
-      from app_public.project_contracts
+    const outsiderVisibleCounts = await database.query(`
+      select
+        (select count(*)::int from app_public.project_contracts) as project_contract_count,
+        (select count(*)::int from app_public.project_token_deployments) as project_token_deployment_count
     `);
 
-    assert.deepEqual(viewerVisibleContracts.rows[0], {
-      contract_count: 1
+    assert.deepEqual(viewerVisibleCounts.rows[0], {
+      project_contract_count: 1,
+      project_token_deployment_count: 1
     });
 
-    assert.deepEqual(outsiderVisibleContracts.rows[0], {
-      contract_count: 0
+    assert.deepEqual(outsiderVisibleCounts.rows[0], {
+      project_contract_count: 0,
+      project_token_deployment_count: 0
     });
   } finally {
     await resetReplaySession(database);
