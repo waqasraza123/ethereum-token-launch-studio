@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireCurrentUser } from "@/lib/auth/session";
-import type { ProjectCreateInput } from "@/lib/projects/input";
 import { parseProjectCreateFormData } from "@/lib/projects/input";
 import {
   getWorkspaceDashboardPath,
@@ -12,16 +11,16 @@ import {
   getWorkspaceProjectPath,
   routePaths,
 } from "@/lib/routing/route-paths";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerAppSupabaseClient } from "@/lib/supabase/server-app";
 import { canCreateProjectsForRole, getWorkspaceAccessBySlug } from "@/lib/workspaces/access";
 
 const buildProjectCreationErrorRedirect = (workspaceSlug: string, message: string) =>
   `${getWorkspaceProjectNewPath(workspaceSlug)}?error=${encodeURIComponent(message)}`;
 
 export const createProjectAction = async (formData: FormData): Promise<void> => {
-  const currentUser = await requireCurrentUser();
+  await requireCurrentUser();
 
-  let parsedInput: ProjectCreateInput;
+  let parsedInput;
 
   try {
     parsedInput = parseProjectCreateFormData(formData);
@@ -47,7 +46,7 @@ export const createProjectAction = async (formData: FormData): Promise<void> => 
     throw error;
   }
 
-  const workspaceAccess = await getWorkspaceAccessBySlug(currentUser.id, parsedInput.workspaceSlug);
+  const workspaceAccess = await getWorkspaceAccessBySlug(parsedInput.workspaceSlug);
 
   if (!workspaceAccess) {
     redirect(routePaths.dashboard);
@@ -61,10 +60,9 @@ export const createProjectAction = async (formData: FormData): Promise<void> => 
     );
   }
 
-  const supabase = createAdminSupabaseClient();
+  const supabase = await createServerAppSupabaseClient();
 
   const { error } = await supabase.rpc("create_project", {
-    p_actor_auth_user_id: currentUser.id,
     p_project_description: parsedInput.projectDescription,
     p_project_id: crypto.randomUUID(),
     p_project_name: parsedInput.projectName,

@@ -51,32 +51,27 @@ test("web worker and contracts workspace manifests are present", async () => {
   assert.equal(contractsPackageJson.name, "@token-launch-studio/contracts");
 });
 
-test("workspace and project route files exist", async () => {
+test("session-backed admin read files exist", async () => {
+  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/supabase/server-app.ts"));
+  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/workspaces/access.ts"));
+  await assert.doesNotReject(async () => readTextFile("apps/web/src/lib/projects/data.ts"));
+});
+
+test("infra boundary includes the rls and session read migration", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/page.tsx"),
-  );
-  await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/new/page.tsx"),
-  );
-  await assert.doesNotReject(async () =>
-    readTextFile(
-      "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/page.tsx",
-    ),
+    readTextFile("infra/supabase/migrations/0005_phase_2_rls_and_session_reads.sql"),
   );
 });
 
-test("infra boundary includes the workspace project flow migration", async () => {
-  await assert.doesNotReject(async () =>
-    readTextFile("infra/supabase/migrations/0004_phase_2_workspace_project_flows.sql"),
-  );
-});
-
-test("phase docs exist for foundation core schema auth spine and workspace project flows", async () => {
+test("phase docs exist for foundation core schema auth spine workspace project flows and rls hardening", async () => {
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-1-foundation.md"));
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-core-schema.md"));
   await assert.doesNotReject(async () => readTextFile("docs/phases/phase-2-auth-spine.md"));
   await assert.doesNotReject(async () =>
     readTextFile("docs/phases/phase-2-workspace-project-flows.md"),
+  );
+  await assert.doesNotReject(async () =>
+    readTextFile("docs/phases/phase-2-rls-and-session-reads.md"),
   );
 });
 

@@ -30,13 +30,11 @@ export default async function WorkspaceDashboardPage({
   params,
   searchParams,
 }: WorkspaceDashboardPageProps) {
-  const currentUser = await requireCurrentUser();
+  await requireCurrentUser();
+
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
-  const workspaceAccess = await getWorkspaceAccessBySlug(
-    currentUser.id,
-    resolvedParams.workspaceSlug,
-  );
+  const workspaceAccess = await getWorkspaceAccessBySlug(resolvedParams.workspaceSlug);
 
   if (!workspaceAccess) {
     notFound();

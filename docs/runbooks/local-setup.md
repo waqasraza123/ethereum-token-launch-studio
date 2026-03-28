@@ -17,17 +17,11 @@ Copy `.env.example` into your local env file and provide real Supabase values fo
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-The authenticated dashboard and workspace/project flows remain unproven until those values exist and your Supabase project contains at least one email/password auth user.
+The protected admin surface now reads through the authenticated session client, so real runtime proof still depends on valid session cookies and a real Supabase project.
 
 ## Run the web shell
 
     pnpm dev:web
-
-The web shell should render:
-
-- `/`
-- `/sign-in`
-- `/dashboard`
 
 With real auth data configured, the protected route flow should behave like this:
 
@@ -35,20 +29,7 @@ With real auth data configured, the protected route flow should behave like this
 - authenticated users with no memberships see workspace bootstrap
 - authenticated users with one workspace redirect into `/dashboard/[workspaceSlug]`
 - authenticated users with multiple workspaces see a workspace selector
-- project creation happens at `/dashboard/[workspaceSlug]/projects/new`
-- project detail reads happen at `/dashboard/[workspaceSlug]/projects/[projectSlug]`
-
-## Run the worker shell
-
-    pnpm dev:worker
-
-The worker should log a `worker.shell.ready` message and stay alive until you stop it.
-
-## Run the contracts workspace proof commands
-
-    pnpm contracts:compile
-    pnpm contracts:test
-    pnpm --filter @token-launch-studio/contracts accounts
+- workspace and project reads only return rows authorized by the user’s memberships
 
 ## Run the database proof commands
 
@@ -61,7 +42,7 @@ The database boundary should:
 - list the migration files in sequence order
 - validate migration naming, ordering, and non-empty content
 - replay all migrations from zero into an embedded database
-- prove the workspace bootstrap and project creation functions exist and work
+- prove the protected reads are filtered by membership-aware RLS
 
 ## Run the web proof commands
 
@@ -72,6 +53,4 @@ The database boundary should:
 
 ## Current status
 
-This repo now proves root tooling, web, worker, contracts, replayable database schema, auth spine, and the first protected workspace/project route structure.
-
-True end-to-end runtime behavior still depends on real Supabase credentials and seeded auth users.
+This repo now proves root tooling, web, worker, contracts, replayable schema evolution, protected session-backed admin reads, and database-side authorization hardening for the first workspace/project surfaces.

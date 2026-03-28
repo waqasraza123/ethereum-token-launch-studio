@@ -7,8 +7,9 @@ This directory exists to lock the database infrastructure boundary before app-si
 - `config.toml` for Supabase config scaffolding
 - `migrations/0001_phase_1_baseline.sql` for the minimal boundary setup
 - `migrations/0002_phase_2_core_business_schema.sql` for the first real business schema
-- `migrations/0003_phase_2_auth_workspace_bootstrap.sql` for the first authenticated bootstrap write
-- `migrations/0004_phase_2_workspace_project_flows.sql` for workspace-aware project creation
+- `migrations/0003_phase_2_auth_workspace_bootstrap.sql` for authenticated workspace bootstrap
+- `migrations/0004_phase_2_workspace_project_flows.sql` for role-aware project creation
+- `migrations/0005_phase_2_rls_and_session_reads.sql` for RLS hardening and session-backed reads
 
 ## Current migration scope
 
@@ -29,23 +30,24 @@ Creates the first business tables and database-side support behavior:
 - `app_public.projects`
 - `app_private.set_updated_at()` trigger function
 - `updated_at` triggers on all three core tables
-- indexes and constraints for slugs, roles, and relationships
 
 ### `0003_phase_2_auth_workspace_bootstrap.sql`
 
-Creates the first real auth-aware write function:
-
-- `app_public.bootstrap_workspace(...)`
-- atomic workspace plus owner-membership creation
+Creates the authenticated workspace bootstrap function.
 
 ### `0004_phase_2_workspace_project_flows.sql`
 
-Creates the first role-aware project write function:
+Creates the role-aware project creation function.
 
-- `app_public.create_project(...)`
-- membership validation by actor auth user id
-- role enforcement for project creation
-- atomic project insertion inside the authorized workspace
+### `0005_phase_2_rls_and_session_reads.sql`
+
+Hardens the protected admin data surface:
+
+- `app_private.is_workspace_member(...)`
+- RLS policies for workspaces, workspace members, and projects
+- authenticated `select` grants for protected reads
+- function signatures updated to derive the actor from `auth.uid()`
+- direct table writes for authenticated users remain blocked
 
 ## Current proof commands
 
@@ -56,8 +58,7 @@ Creates the first role-aware project write function:
 ## What is intentionally deferred
 
 - local Supabase runtime workflows
-- RLS policies
-- invitations
+- invitation flows
 - contract registry tables
 - activity tables
 - seed data

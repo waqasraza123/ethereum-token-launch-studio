@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerAppSupabaseClient } from "@/lib/supabase/server-app";
 
 export type ProjectOverview = Readonly<{
   createdAt: string;
@@ -30,7 +30,7 @@ const mapProjectRow = (row: ProjectRow): ProjectOverview => ({
 export const listProjectsForWorkspace = async (
   workspaceId: string,
 ): Promise<readonly ProjectOverview[]> => {
-  const supabase = createAdminSupabaseClient();
+  const supabase = await createServerAppSupabaseClient();
 
   const { data, error } = await supabase
     .from("projects")
@@ -39,7 +39,7 @@ export const listProjectsForWorkspace = async (
     .order("created_at", { ascending: true });
 
   if (error) {
-    throw new Error(`Could not load projects for workspace: ${error.message}`);
+    throw new Error(`Could not load authorized projects for workspace: ${error.message}`);
   }
 
   return ((data ?? []) as readonly ProjectRow[]).map(mapProjectRow);
@@ -49,7 +49,7 @@ export const getProjectBySlug = async (
   workspaceId: string,
   projectSlug: string,
 ): Promise<ProjectOverview | null> => {
-  const supabase = createAdminSupabaseClient();
+  const supabase = await createServerAppSupabaseClient();
 
   const { data, error } = await supabase
     .from("projects")
@@ -59,7 +59,7 @@ export const getProjectBySlug = async (
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Could not load project by slug: ${error.message}`);
+    throw new Error(`Could not load authorized project by slug: ${error.message}`);
   }
 
   if (!data) {

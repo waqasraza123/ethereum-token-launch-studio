@@ -5,18 +5,16 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireCurrentUser } from "@/lib/auth/session";
 import { routePaths } from "@/lib/routing/route-paths";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { WorkspaceBootstrapInput } from "@/lib/workspaces/bootstrap-input";
+import { createServerAppSupabaseClient } from "@/lib/supabase/server-app";
 import { parseWorkspaceBootstrapFormData } from "@/lib/workspaces/bootstrap-input";
 
 const buildDashboardErrorRedirect = (message: string) =>
   `${routePaths.dashboard}?error=${encodeURIComponent(message)}`;
 
 export const bootstrapWorkspaceAction = async (formData: FormData): Promise<void> => {
-  const currentUser = await requireCurrentUser();
+  await requireCurrentUser();
 
-  let parsedInput: WorkspaceBootstrapInput;
+  let parsedInput;
 
   try {
     parsedInput = parseWorkspaceBootstrapFormData(formData);
@@ -28,10 +26,9 @@ export const bootstrapWorkspaceAction = async (formData: FormData): Promise<void
     throw error;
   }
 
-  const supabase = createAdminSupabaseClient();
+  const supabase = await createServerAppSupabaseClient();
 
   const { error } = await supabase.rpc("bootstrap_workspace", {
-    p_owner_auth_user_id: currentUser.id,
     p_owner_membership_id: crypto.randomUUID(),
     p_workspace_id: crypto.randomUUID(),
     p_workspace_name: parsedInput.workspaceName,
@@ -43,7 +40,7 @@ export const bootstrapWorkspaceAction = async (formData: FormData): Promise<void
       redirect(buildDashboardErrorRedirect("That workspace slug is already in use."));
     }
 
-    redirect(buildDashboardErrorRedirect("Could not create the first workspace right now."));
+    redirect(buildDashboardErrorRedirect("Could not create the workspace right now."));
   }
 
   revalidatePath(routePaths.dashboard);
@@ -51,6 +48,7 @@ export const bootstrapWorkspaceAction = async (formData: FormData): Promise<void
 };
 
 export const signOutAction = async (): Promise<void> => {
+  const { createServerSupabaseClient } = await import("@/lib/supabase/server");
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.auth.signOut();
 

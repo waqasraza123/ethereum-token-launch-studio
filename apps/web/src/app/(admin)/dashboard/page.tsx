@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
+import { BootstrapWorkspaceForm } from "@/components/workspaces/bootstrap-workspace-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { SignOutForm } from "@/components/dashboard/sign-out-form";
 import { PageShell } from "@/components/foundation/page-shell";
-import { BootstrapWorkspaceForm } from "@/components/workspaces/bootstrap-workspace-form";
 import { requireCurrentUser } from "@/lib/auth/session";
 import { getWorkspaceDashboardPath } from "@/lib/routing/route-paths";
 import { getWorkspaceAccessOverview } from "@/lib/workspaces/access";
@@ -30,24 +30,30 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const currentUser = await requireCurrentUser();
   const resolvedSearchParams = await searchParams;
   const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
-  const workspaceAccess = await getWorkspaceAccessOverview(currentUser.id);
-  const [singleWorkspaceAccess] = workspaceAccess;
+  const createdMessage =
+    readSingleSearchParam(resolvedSearchParams, "created") === "1"
+      ? "Workspace created successfully."
+      : null;
+  const workspaceAccess = await getWorkspaceAccessOverview();
 
   if (workspaceAccess.length === 0) {
     return (
       <PageShell
         eyebrow="Workspace bootstrap"
         title="Create the first workspace before deeper admin tooling lands."
-        description="The dashboard already validates the current auth session and knows there is no workspace membership yet. This form bootstraps the first owner workspace through a database-side function."
+        description="This route is now authenticated through the user session and can bootstrap the first workspace without a service-role read path."
         actions={<SignOutForm />}
       >
+        {createdMessage ? <div className="status-banner success">{createdMessage}</div> : null}
         <BootstrapWorkspaceForm errorMessage={errorMessage} />
       </PageShell>
     );
   }
 
-  if (workspaceAccess.length === 1 && singleWorkspaceAccess) {
-    redirect(getWorkspaceDashboardPath(singleWorkspaceAccess.workspace.slug));
+  const onlyWorkspaceAccess = workspaceAccess[0];
+
+  if (workspaceAccess.length === 1 && onlyWorkspaceAccess) {
+    redirect(getWorkspaceDashboardPath(onlyWorkspaceAccess.workspace.slug));
   }
 
   return (
