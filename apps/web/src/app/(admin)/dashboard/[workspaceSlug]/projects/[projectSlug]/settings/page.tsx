@@ -1,12 +1,16 @@
-import { notFound } from "next/navigation";
-import { ProjectDetailShell } from "@/components/projects/project-detail-shell";
+import { notFound, redirect } from "next/navigation";
+import { ProjectSettingsShell } from "@/components/projects/project-settings-shell";
 import { requireCurrentUser } from "@/lib/auth/session";
 import { getProjectBySlug } from "@/lib/projects/data";
-import { getWorkspaceAccessBySlug } from "@/lib/workspaces/access";
+import { getWorkspaceDashboardPath } from "@/lib/routing/route-paths";
+import {
+  canCreateProjectsForRole,
+  getWorkspaceAccessBySlug
+} from "@/lib/workspaces/access";
 
 export const dynamic = "force-dynamic";
 
-type ProjectDetailPageProps = Readonly<{
+type ProjectSettingsPageProps = Readonly<{
   params: Promise<{
     projectSlug: string;
     workspaceSlug: string;
@@ -27,10 +31,10 @@ const readSingleSearchParam = (
   return value ?? null;
 };
 
-export default async function ProjectDetailPage({
+export default async function ProjectSettingsPage({
   params,
   searchParams
-}: ProjectDetailPageProps) {
+}: ProjectSettingsPageProps) {
   await requireCurrentUser();
 
   const resolvedParams = await params;
@@ -39,6 +43,14 @@ export default async function ProjectDetailPage({
 
   if (!workspaceAccess) {
     notFound();
+  }
+
+  if (!canCreateProjectsForRole(workspaceAccess.role)) {
+    redirect(
+      `${getWorkspaceDashboardPath(workspaceAccess.workspace.slug)}?error=${encodeURIComponent(
+        "Your current role cannot manage projects in this workspace."
+      )}`
+    );
   }
 
   const project = await getProjectBySlug(
@@ -50,17 +62,12 @@ export default async function ProjectDetailPage({
     notFound();
   }
 
-  const statusMessage =
-    readSingleSearchParam(resolvedSearchParams, "created") === "1"
-      ? "Project created successfully."
-      : readSingleSearchParam(resolvedSearchParams, "updated") === "1"
-        ? "Project updated successfully."
-        : null;
+  const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
 
   return (
-    <ProjectDetailShell
+    <ProjectSettingsShell
+      errorMessage={errorMessage}
       project={project}
-      statusMessage={statusMessage}
       workspaceAccess={workspaceAccess}
     />
   );

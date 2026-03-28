@@ -24,11 +24,11 @@ const mapProjectRow = (row: ProjectRow): ProjectOverview => ({
   id: row.id,
   name: row.name,
   slug: row.slug,
-  workspaceId: row.workspace_id,
+  workspaceId: row.workspace_id
 });
 
 export const listProjectsForWorkspace = async (
-  workspaceId: string,
+  workspaceId: string
 ): Promise<readonly ProjectOverview[]> => {
   const supabase = await createServerAppSupabaseClient();
 
@@ -47,7 +47,7 @@ export const listProjectsForWorkspace = async (
 
 export const getProjectBySlug = async (
   workspaceId: string,
-  projectSlug: string,
+  projectSlug: string
 ): Promise<ProjectOverview | null> => {
   const supabase = await createServerAppSupabaseClient();
 

@@ -2,27 +2,35 @@ import Link from "next/link";
 import { SignOutForm } from "@/components/dashboard/sign-out-form";
 import { PageShell } from "@/components/foundation/page-shell";
 import type { ProjectOverview } from "@/lib/projects/data";
-import { getWorkspaceDashboardPath, getWorkspaceProjectNewPath } from "@/lib/routing/route-paths";
-import { canCreateProjectsForRole, type WorkspaceAccessContext } from "@/lib/workspaces/access";
+import {
+  getWorkspaceDashboardPath,
+  getWorkspaceProjectContractsPath,
+  getWorkspaceProjectNewPath,
+  getWorkspaceProjectSettingsPath
+} from "@/lib/routing/route-paths";
+import {
+  canCreateProjectsForRole,
+  type WorkspaceAccessContext
+} from "@/lib/workspaces/access";
 
 type ProjectDetailShellProps = Readonly<{
-  createdMessage: string | null;
   project: ProjectOverview;
+  statusMessage: string | null;
   workspaceAccess: WorkspaceAccessContext;
 }>;
 
 const detailNotes = [
-  "This route proves the first protected workspace-plus-project read path.",
-  "The workspace membership guard runs before the project lookup is resolved.",
-  "Project creation now redirects into a real protected read page instead of a generic dashboard.",
+  "This route proves the protected workspace-plus-project read path.",
+  "Project settings and contract registry now live in dedicated protected sub-routes.",
+  "Project deletion is intentionally blocked while attached contracts still exist."
 ];
 
 export function ProjectDetailShell({
-  createdMessage,
   project,
-  workspaceAccess,
+  statusMessage,
+  workspaceAccess
 }: ProjectDetailShellProps) {
-  const canCreateProjects = canCreateProjectsForRole(workspaceAccess.role);
+  const canManageProject = canCreateProjectsForRole(workspaceAccess.role);
 
   return (
     <PageShell
@@ -37,19 +45,39 @@ export function ProjectDetailShell({
           >
             Back to workspace
           </Link>
-          {canCreateProjects ? (
-            <Link
-              className="button-link"
-              href={getWorkspaceProjectNewPath(workspaceAccess.workspace.slug)}
-            >
-              New project
-            </Link>
+          <Link
+            className="button-link secondary"
+            href={getWorkspaceProjectContractsPath(
+              workspaceAccess.workspace.slug,
+              project.slug
+            )}
+          >
+            Contracts
+          </Link>
+          {canManageProject ? (
+            <>
+              <Link
+                className="button-link secondary"
+                href={getWorkspaceProjectSettingsPath(
+                  workspaceAccess.workspace.slug,
+                  project.slug
+                )}
+              >
+                Settings
+              </Link>
+              <Link
+                className="button-link"
+                href={getWorkspaceProjectNewPath(workspaceAccess.workspace.slug)}
+              >
+                New project
+              </Link>
+            </>
           ) : null}
           <SignOutForm />
         </div>
       }
     >
-      {createdMessage ? <div className="status-banner success">{createdMessage}</div> : null}
+      {statusMessage ? <div className="status-banner success">{statusMessage}</div> : null}
       <section className="placeholder-panel">
         <h2 className="placeholder-panel-title">Project summary</h2>
         <p className="placeholder-panel-description">

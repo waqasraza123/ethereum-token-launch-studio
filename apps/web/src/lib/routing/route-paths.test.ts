@@ -3,8 +3,10 @@ import test from "node:test";
 import {
   getWorkspaceDashboardPath,
   getWorkspaceMembersPath,
+  getWorkspaceProjectContractsPath,
   getWorkspaceProjectNewPath,
   getWorkspaceProjectPath,
+  getWorkspaceProjectSettingsPath,
   routePaths
 } from "./route-paths.js";
 
@@ -26,5 +28,13 @@ test("workspace route helpers build the expected paths", () => {
   assert.equal(
     getWorkspaceProjectPath("studio-alpha", "alpha-launch"),
     "/dashboard/studio-alpha/projects/alpha-launch"
+  );
+  assert.equal(
+    getWorkspaceProjectSettingsPath("studio-alpha", "alpha-launch"),
+    "/dashboard/studio-alpha/projects/alpha-launch/settings"
+  );
+  assert.equal(
+    getWorkspaceProjectContractsPath("studio-alpha", "alpha-launch"),
+    "/dashboard/studio-alpha/projects/alpha-launch/contracts"
   );
 });

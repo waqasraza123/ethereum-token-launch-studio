@@ -18,4 +18,14 @@ export const getWorkspaceProjectNewPath = (workspaceSlug: string): string =>
 export const getWorkspaceProjectPath = (workspaceSlug: string, projectSlug: string): string =>
   `${getWorkspaceDashboardPath(workspaceSlug)}/projects/${encodePathSegment(projectSlug)}`;
 
+export const getWorkspaceProjectSettingsPath = (
+  workspaceSlug: string,
+  projectSlug: string
+): string => `${getWorkspaceProjectPath(workspaceSlug, projectSlug)}/settings`;
+
+export const getWorkspaceProjectContractsPath = (
+  workspaceSlug: string,
+  projectSlug: string
+): string => `${getWorkspaceProjectPath(workspaceSlug, projectSlug)}/contracts`;
+
 export type AppRouteKey = keyof typeof routePaths;

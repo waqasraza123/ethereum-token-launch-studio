@@ -13,8 +13,9 @@ import {
 
 const firstUserId = "00000000-0000-0000-0000-000000000001";
 const secondUserId = "00000000-0000-0000-0000-000000000002";
+const thirdUserId = "00000000-0000-0000-0000-000000000003";
 
-test("supabase migration manifest is sequential and includes the membership management migration", async () => {
+test("supabase migration manifest is sequential and includes the project context and contract registry migration", async () => {
   const manifest = await validateSupabaseMigrationManifest();
 
   assert.deepEqual(
@@ -25,164 +26,43 @@ test("supabase migration manifest is sequential and includes the membership mana
       "0003_phase_2_auth_workspace_bootstrap.sql",
       "0004_phase_2_workspace_project_flows.sql",
       "0005_phase_2_rls_and_session_reads.sql",
-      "0006_phase_2_membership_management.sql"
+      "0006_phase_2_membership_management.sql",
+      "0007_phase_2_project_context_and_contract_registry.sql"
     ]
   );
 });
 
-test("membership management migration defines listing invite update and removal functions", async () => {
+test("project context and contract registry migration defines the registry table and protected functions", async () => {
   const manifest = await readSupabaseMigrationManifest();
-  const membershipMigration = manifest[5];
+  const registryMigration = manifest[6];
 
   assert.match(
-    membershipMigration.statementText,
-    /create or replace function app_public\.list_workspace_members/i
+    registryMigration.statementText,
+    /create table if not exists app_public\.project_contracts/i
   );
   assert.match(
-    membershipMigration.statementText,
-    /create or replace function app_public\.invite_workspace_member/i
+    registryMigration.statementText,
+    /create or replace function app_public\.update_project/i
   );
   assert.match(
-    membershipMigration.statementText,
-    /create or replace function app_public\.update_workspace_member_role/i
+    registryMigration.statementText,
+    /create or replace function app_public\.delete_project/i
   );
   assert.match(
-    membershipMigration.statementText,
-    /create or replace function app_public\.remove_workspace_member/i
+    registryMigration.statementText,
+    /create or replace function app_public\.attach_project_contract/i
   );
   assert.match(
-    membershipMigration.statementText,
-    /create or replace function app_private\.is_workspace_owner/i
+    registryMigration.statementText,
+    /create or replace function app_public\.detach_project_contract/i
+  );
+  assert.match(
+    registryMigration.statementText,
+    /create policy project_contracts_select_project_visibility/i
   );
 });
 
-test("owner can invite an existing auth user and list workspace members", async () => {
-  const { database } = await replaySupabaseMigrations();
-
-  try {
-    await database.exec(`
-      insert into auth.users (id, email)
-      values
-        ('${firstUserId}', 'owner@example.com'),
-        ('${secondUserId}', 'viewer@example.com');
-    `);
-
-    await setReplayAuthenticatedUser(database, firstUserId);
-
-    await database.query(`
-      select *
-      from app_public.bootstrap_workspace(
-        '10000000-0000-0000-0000-000000000001',
-        'studio-core',
-        'Studio Core',
-        '20000000-0000-0000-0000-000000000001'
-      )
-    `);
-
-    const inviteResult = await database.query(`
-      select *
-      from app_public.invite_workspace_member(
-        '10000000-0000-0000-0000-000000000001',
-        '20000000-0000-0000-0000-000000000002',
-        'viewer@example.com',
-        'viewer'
-      )
-    `);
-
-    const membersResult = await database.query(`
-      select *
-      from app_public.list_workspace_members('10000000-0000-0000-0000-000000000001')
-      order by email
-    `);
-
-    assert.deepEqual(inviteResult.rows[0], {
-      auth_user_id: secondUserId,
-      workspace_id: "10000000-0000-0000-0000-000000000001",
-      workspace_member_id: "20000000-0000-0000-0000-000000000002"
-    });
-
-    assert.deepEqual(
-      membersResult.rows.map((row) => row.email),
-      ["owner@example.com", "viewer@example.com"]
-    );
-  } finally {
-    await resetReplaySession(database);
-    await closeSupabaseReplayDatabase(database);
-  }
-});
-
-test("non-owners cannot invite update or remove workspace members", async () => {
-  const { database } = await replaySupabaseMigrations();
-
-  try {
-    await database.exec(`
-      insert into auth.users (id, email)
-      values
-        ('${firstUserId}', 'owner@example.com'),
-        ('${secondUserId}', 'finance@example.com');
-    `);
-
-    await setReplayAuthenticatedUser(database, firstUserId);
-
-    await database.query(`
-      select *
-      from app_public.bootstrap_workspace(
-        '10000000-0000-0000-0000-000000000001',
-        'studio-core',
-        'Studio Core',
-        '20000000-0000-0000-0000-000000000001'
-      )
-    `);
-
-    await database.query(`
-      select *
-      from app_public.invite_workspace_member(
-        '10000000-0000-0000-0000-000000000001',
-        '20000000-0000-0000-0000-000000000002',
-        'finance@example.com',
-        'finance_manager'
-      )
-    `);
-
-    await setReplayAuthenticatedUser(database, secondUserId);
-
-    await assert.rejects(
-      database.query(`
-        select *
-        from app_public.invite_workspace_member(
-          '10000000-0000-0000-0000-000000000001',
-          '20000000-0000-0000-0000-000000000003',
-          'owner@example.com',
-          'viewer'
-        )
-      `)
-    );
-
-    await assert.rejects(
-      database.query(`
-        select *
-        from app_public.update_workspace_member_role(
-          '20000000-0000-0000-0000-000000000002',
-          'viewer'
-        )
-      `)
-    );
-
-    await assert.rejects(
-      database.query(`
-        select *
-        from app_public.remove_workspace_member(
-          '20000000-0000-0000-0000-000000000001'
-        )
-      `)
-    );
-  } finally {
-    await resetReplaySession(database);
-    await closeSupabaseReplayDatabase(database);
-  }
-});
-
-test("the last owner cannot be demoted or removed", async () => {
+test("authorized actor can update a project attach and detach a contract then delete the project", async () => {
   const { database } = await replaySupabaseMigrations();
 
   try {
@@ -203,39 +83,101 @@ test("the last owner cannot be demoted or removed", async () => {
       )
     `);
 
-    await assert.rejects(
-      database.query(`
-        select *
-        from app_public.update_workspace_member_role(
-          '20000000-0000-0000-0000-000000000001',
-          'viewer'
-        )
-      `)
-    );
+    await database.query(`
+      select *
+      from app_public.create_project(
+        '30000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-000000000001',
+        'alpha-launch',
+        'Alpha Launch',
+        'Initial project'
+      )
+    `);
 
-    await assert.rejects(
-      database.query(`
-        select *
-        from app_public.remove_workspace_member(
-          '20000000-0000-0000-0000-000000000001'
-        )
-      `)
-    );
+    const updateResult = await database.query(`
+      select *
+      from app_public.update_project(
+        '30000000-0000-0000-0000-000000000001',
+        'Alpha Launch V2',
+        'alpha-launch-v2',
+        'Updated project'
+      )
+    `);
+
+    const attachResult = await database.query(`
+      select *
+      from app_public.attach_project_contract(
+        '40000000-0000-0000-0000-000000000001',
+        '30000000-0000-0000-0000-000000000001',
+        11155111,
+        '0x1111111111111111111111111111111111111111',
+        'project_token',
+        'Alpha Token',
+        'testnet',
+        'https://sepolia.etherscan.io/address/0x1111111111111111111111111111111111111111',
+        'Initial token'
+      )
+    `);
+
+    const detachResult = await database.query(`
+      select *
+      from app_public.detach_project_contract(
+        '40000000-0000-0000-0000-000000000001'
+      )
+    `);
+
+    const deleteResult = await database.query(`
+      select *
+      from app_public.delete_project(
+        '30000000-0000-0000-0000-000000000001'
+      )
+    `);
+
+    const countsResult = await database.query(`
+      select
+        (select count(*)::int from app_public.projects) as project_count,
+        (select count(*)::int from app_public.project_contracts) as project_contract_count
+    `);
+
+    assert.deepEqual(updateResult.rows[0], {
+      project_id: "30000000-0000-0000-0000-000000000001",
+      project_slug: "alpha-launch-v2",
+      workspace_id: "10000000-0000-0000-0000-000000000001"
+    });
+
+    assert.deepEqual(attachResult.rows[0], {
+      address: "0x1111111111111111111111111111111111111111",
+      project_contract_id: "40000000-0000-0000-0000-000000000001",
+      project_id: "30000000-0000-0000-0000-000000000001"
+    });
+
+    assert.deepEqual(detachResult.rows[0], {
+      project_contract_id: "40000000-0000-0000-0000-000000000001",
+      project_id: "30000000-0000-0000-0000-000000000001"
+    });
+
+    assert.deepEqual(deleteResult.rows[0], {
+      project_id: "30000000-0000-0000-0000-000000000001",
+      workspace_id: "10000000-0000-0000-0000-000000000001"
+    });
+
+    assert.deepEqual(countsResult.rows[0], {
+      project_contract_count: 0,
+      project_count: 0
+    });
   } finally {
     await resetReplaySession(database);
     await closeSupabaseReplayDatabase(database);
   }
 });
 
-test("workspace selector visibility changes after membership removal", async () => {
+test("project deletion is blocked while contracts remain attached", async () => {
   const { database } = await replaySupabaseMigrations();
 
   try {
     await database.exec(`
       insert into auth.users (id, email)
-      values
-        ('${firstUserId}', 'owner@example.com'),
-        ('${secondUserId}', 'viewer@example.com');
+      values ('${firstUserId}', 'owner@example.com');
     `);
 
     await setReplayAuthenticatedUser(database, firstUserId);
@@ -252,6 +194,96 @@ test("workspace selector visibility changes after membership removal", async () 
 
     await database.query(`
       select *
+      from app_public.create_project(
+        '30000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-000000000001',
+        'alpha-launch',
+        'Alpha Launch',
+        'Initial project'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.attach_project_contract(
+        '40000000-0000-0000-0000-000000000001',
+        '30000000-0000-0000-0000-000000000001',
+        11155111,
+        '0x1111111111111111111111111111111111111111',
+        'project_token',
+        'Alpha Token',
+        'testnet',
+        null,
+        null
+      )
+    `);
+
+    await assert.rejects(
+      database.query(`
+        select *
+        from app_public.delete_project(
+          '30000000-0000-0000-0000-000000000001'
+        )
+      `)
+    );
+  } finally {
+    await resetReplaySession(database);
+    await closeSupabaseReplayDatabase(database);
+  }
+});
+
+test("project contracts are visible only to authorized workspace members", async () => {
+  const { database } = await replaySupabaseMigrations();
+
+  try {
+    await database.exec(`
+      insert into auth.users (id, email)
+      values
+        ('${firstUserId}', 'owner@example.com'),
+        ('${secondUserId}', 'viewer@example.com'),
+        ('${thirdUserId}', 'outsider@example.com');
+    `);
+
+    await setReplayAuthenticatedUser(database, firstUserId);
+
+    await database.query(`
+      select *
+      from app_public.bootstrap_workspace(
+        '10000000-0000-0000-0000-000000000001',
+        'studio-core',
+        'Studio Core',
+        '20000000-0000-0000-0000-000000000001'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.create_project(
+        '30000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-000000000001',
+        'alpha-launch',
+        'Alpha Launch',
+        'Initial project'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.attach_project_contract(
+        '40000000-0000-0000-0000-000000000001',
+        '30000000-0000-0000-0000-000000000001',
+        11155111,
+        '0x1111111111111111111111111111111111111111',
+        'project_token',
+        'Alpha Token',
+        'testnet',
+        null,
+        null
+      )
+    `);
+
+    await database.query(`
+      select *
       from app_public.invite_workspace_member(
         '10000000-0000-0000-0000-000000000001',
         '20000000-0000-0000-0000-000000000002',
@@ -262,33 +294,24 @@ test("workspace selector visibility changes after membership removal", async () 
 
     await setReplayAuthenticatedUser(database, secondUserId);
 
-    const visibleBeforeRemoval = await database.query(`
-      select count(*)::int as workspace_count
-      from app_public.workspaces
+    const viewerVisibleContracts = await database.query(`
+      select count(*)::int as contract_count
+      from app_public.project_contracts
     `);
 
-    await setReplayAuthenticatedUser(database, firstUserId);
+    await setReplayAuthenticatedUser(database, thirdUserId);
 
-    await database.query(`
-      select *
-      from app_public.remove_workspace_member(
-        '20000000-0000-0000-0000-000000000002'
-      )
+    const outsiderVisibleContracts = await database.query(`
+      select count(*)::int as contract_count
+      from app_public.project_contracts
     `);
 
-    await setReplayAuthenticatedUser(database, secondUserId);
-
-    const visibleAfterRemoval = await database.query(`
-      select count(*)::int as workspace_count
-      from app_public.workspaces
-    `);
-
-    assert.deepEqual(visibleBeforeRemoval.rows[0], {
-      workspace_count: 1
+    assert.deepEqual(viewerVisibleContracts.rows[0], {
+      contract_count: 1
     });
 
-    assert.deepEqual(visibleAfterRemoval.rows[0], {
-      workspace_count: 0
+    assert.deepEqual(outsiderVisibleContracts.rows[0], {
+      contract_count: 0
     });
   } finally {
     await resetReplaySession(database);

@@ -13,48 +13,42 @@ This repo currently includes:
 - a replayable Supabase infra boundary
 - a core Phase 2 business schema for workspaces, workspace members, and projects
 - a server-side auth/data spine for sign-in and workspace bootstrap
-- protected workspace/project routes
+- protected workspace and project routes
 - database-side authorization hardening and session-backed admin reads
-- the first owner-only workspace membership management flow
+- owner-only workspace membership management
+- protected project editing and deletion
+- the first project-to-contract registry attachment flow
 - shared TypeScript and ESLint tooling
 - phase and architecture docs
 
-This repo does not yet include invite email delivery, contract registry tables, token product logic, sale logic, or app-side blockchain integration.
+This repo does not yet include deployment automation into the contract registry, token product logic, sale logic, or app-side blockchain integration.
 
 ## Install
 
-```bash
-pnpm install
-```
+    pnpm install
 
 ## Database verification
 
-```bash
-pnpm db:list
-pnpm db:validate
-pnpm db:replay:check
-```
+    pnpm db:list
+    pnpm db:validate
+    pnpm db:replay:check
 
 ## Web verification
 
-```bash
-pnpm --filter @token-launch-studio/web lint
-pnpm --filter @token-launch-studio/web typecheck
-pnpm --filter @token-launch-studio/web test
-pnpm --filter @token-launch-studio/web build
-```
+    pnpm --filter @token-launch-studio/web lint
+    pnpm --filter @token-launch-studio/web typecheck
+    pnpm --filter @token-launch-studio/web test
+    pnpm --filter @token-launch-studio/web build
 
 ## Full repo verification
 
-```bash
-pnpm format:check
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm contracts:compile
-pnpm contracts:test
-pnpm db:validate
-pnpm db:replay:check
-pnpm build
-pnpm validate:foundation
-```
+    pnpm format:check
+    pnpm lint
+    pnpm typecheck
+    pnpm test
+    pnpm contracts:compile
+    pnpm contracts:test
+    pnpm db:validate
+    pnpm db:replay:check
+    pnpm build
+    pnpm validate:foundation

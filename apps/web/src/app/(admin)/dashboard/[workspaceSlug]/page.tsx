@@ -15,7 +15,7 @@ type WorkspaceDashboardPageProps = Readonly<{
 
 const readSingleSearchParam = (
   searchParams: Record<string, string | string[] | undefined>,
-  key: string,
+  key: string
 ): string | null => {
   const value = searchParams[key];
 
@@ -28,7 +28,7 @@ const readSingleSearchParam = (
 
 export default async function WorkspaceDashboardPage({
   params,
-  searchParams,
+  searchParams
 }: WorkspaceDashboardPageProps) {
   await requireCurrentUser();
 
@@ -42,11 +42,16 @@ export default async function WorkspaceDashboardPage({
 
   const projects = await listProjectsForWorkspace(workspaceAccess.workspace.id);
   const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
+  const statusMessage =
+    readSingleSearchParam(resolvedSearchParams, "deleted") === "1"
+      ? "Project deleted successfully."
+      : null;
 
   return (
     <WorkspaceDashboardShell
       errorMessage={errorMessage}
       projects={projects}
+      statusMessage={statusMessage}
       workspaceAccess={workspaceAccess}
     />
   );

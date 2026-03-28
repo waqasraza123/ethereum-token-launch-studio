@@ -16,18 +16,20 @@ import { SignOutForm } from "./sign-out-form";
 type WorkspaceDashboardShellProps = Readonly<{
   errorMessage: string | null;
   projects: readonly ProjectOverview[];
+  statusMessage: string | null;
   workspaceAccess: WorkspaceAccessContext;
 }>;
 
 const workspaceNotes = [
   "This route is keyed by workspace slug and only renders after a server-side membership check.",
-  "Project reads are now scoped to the authorized workspace instead of coming from a global dashboard placeholder.",
-  "Workspace membership management now lives in a dedicated protected members route."
+  "Project reads are scoped to the authorized workspace instead of a global dashboard placeholder.",
+  "Project settings and contract registry now hang off each project route as protected sub-pages."
 ];
 
 export function WorkspaceDashboardShell({
   errorMessage,
   projects,
+  statusMessage,
   workspaceAccess
 }: WorkspaceDashboardShellProps) {
   const canCreateProjects = canCreateProjectsForRole(workspaceAccess.role);
@@ -60,11 +62,12 @@ export function WorkspaceDashboardShell({
         </div>
       }
     >
+      {statusMessage ? <div className="status-banner success">{statusMessage}</div> : null}
       {errorMessage ? <div className="status-banner error">{errorMessage}</div> : null}
       <section className="placeholder-panel">
         <h2 className="placeholder-panel-title">Current workspace context</h2>
         <p className="placeholder-panel-description">
-          This page is the first protected workspace-scoped admin surface in the app.
+          This page is the protected workspace-scoped admin surface for projects and members.
         </p>
         <ul className="placeholder-list">
           {workspaceNotes.map((item) => (
@@ -77,7 +80,7 @@ export function WorkspaceDashboardShell({
       <section className="placeholder-panel">
         <h2 className="placeholder-panel-title">Projects</h2>
         <p className="placeholder-panel-description">
-          Projects are now read by workspace and linked through protected workspace-aware routes.
+          Projects are read by workspace and linked through protected workspace-aware routes.
         </p>
         {projects.length === 0 ? (
           <p className="placeholder-panel-description">

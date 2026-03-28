@@ -51,26 +51,29 @@ test("web worker and contracts workspace manifests are present", async () => {
   assert.equal(contractsPackageJson.name, "@token-launch-studio/contracts");
 });
 
-test("workspace members route files exist", async () => {
+test("project settings and contract registry route files exist", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/members/actions.ts")
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/settings/actions.ts")
   );
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/members/page.tsx")
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/settings/page.tsx")
   );
   await assert.doesNotReject(async () =>
-    readTextFile("apps/web/src/components/workspaces/workspace-members-shell.tsx")
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts/actions.ts")
   );
-});
-
-test("infra boundary includes the membership management migration", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("infra/supabase/migrations/0006_phase_2_membership_management.sql")
+    readTextFile("apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts/page.tsx")
   );
 });
 
-test("phase docs exist for membership management", async () => {
+test("infra boundary includes the project context and contract registry migration", async () => {
   await assert.doesNotReject(async () =>
-    readTextFile("docs/phases/phase-2-membership-management.md")
+    readTextFile("infra/supabase/migrations/0007_phase_2_project_context_and_contract_registry.sql")
+  );
+});
+
+test("phase docs exist for project context and contract registry", async () => {
+  await assert.doesNotReject(async () =>
+    readTextFile("docs/phases/phase-2-project-context-and-contract-registry.md")
   );
 });

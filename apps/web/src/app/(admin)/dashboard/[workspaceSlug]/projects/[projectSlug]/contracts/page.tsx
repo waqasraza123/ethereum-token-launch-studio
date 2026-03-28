@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
-import { ProjectDetailShell } from "@/components/projects/project-detail-shell";
+import { ProjectContractsShell } from "@/components/contracts/project-contracts-shell";
 import { requireCurrentUser } from "@/lib/auth/session";
+import { listProjectContracts } from "@/lib/contracts/registry";
 import { getProjectBySlug } from "@/lib/projects/data";
 import { getWorkspaceAccessBySlug } from "@/lib/workspaces/access";
 
 export const dynamic = "force-dynamic";
 
-type ProjectDetailPageProps = Readonly<{
+type ProjectContractsPageProps = Readonly<{
   params: Promise<{
     projectSlug: string;
     workspaceSlug: string;
@@ -27,10 +28,10 @@ const readSingleSearchParam = (
   return value ?? null;
 };
 
-export default async function ProjectDetailPage({
+export default async function ProjectContractsPage({
   params,
   searchParams
-}: ProjectDetailPageProps) {
+}: ProjectContractsPageProps) {
   await requireCurrentUser();
 
   const resolvedParams = await params;
@@ -50,15 +51,19 @@ export default async function ProjectDetailPage({
     notFound();
   }
 
+  const contracts = await listProjectContracts(project.id);
+  const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
   const statusMessage =
-    readSingleSearchParam(resolvedSearchParams, "created") === "1"
-      ? "Project created successfully."
-      : readSingleSearchParam(resolvedSearchParams, "updated") === "1"
-        ? "Project updated successfully."
+    readSingleSearchParam(resolvedSearchParams, "attached") === "1"
+      ? "Project contract attached successfully."
+      : readSingleSearchParam(resolvedSearchParams, "detached") === "1"
+        ? "Project contract detached successfully."
         : null;
 
   return (
-    <ProjectDetailShell
+    <ProjectContractsShell
+      contracts={contracts}
+      errorMessage={errorMessage}
       project={project}
       statusMessage={statusMessage}
       workspaceAccess={workspaceAccess}
