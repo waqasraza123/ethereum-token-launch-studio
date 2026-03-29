@@ -7,59 +7,53 @@
 
 ## Install dependencies
 
-    pnpm install
+pnpm install
 
 ## Configure environment
 
-Copy `.env.example` into your local env file and provide real values for:
+Copy .env.example into your local env file and provide real values for:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `SEPOLIA_RPC_URL`
-- `SEPOLIA_PRIVATE_KEY`
-- `ETHERSCAN_API_KEY`
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+- SEPOLIA_RPC_URL
+- SEPOLIA_PRIVATE_KEY
+- ETHERSCAN_API_KEY
+- TOKEN_LAUNCH_HEARTBEAT_INTERVAL_MS
+- TOKEN_LAUNCH_STALE_AFTER_MS
 
-## Run the database proof commands
+## Run the proof commands
 
-    pnpm db:list
-    pnpm db:validate
-    pnpm db:replay:check
+pnpm contracts:compile
+pnpm contracts:test
+pnpm db:list
+pnpm db:validate
+pnpm db:replay:check
+pnpm --filter @token-launch-studio/web lint
+pnpm --filter @token-launch-studio/web typecheck
+pnpm --filter @token-launch-studio/web test
+pnpm --filter @token-launch-studio/web build
+pnpm --filter @token-launch-studio/worker lint
+pnpm --filter @token-launch-studio/worker typecheck
+pnpm --filter @token-launch-studio/worker build
 
-## Run the contracts proof commands
+## Runtime proof
 
-    pnpm contracts:compile
-    pnpm contracts:test
+Run both surfaces:
 
-## Deploy a real Sepolia token for an existing project
+pnpm dev:worker
+pnpm dev:web
 
-Prepare a deployment config file by copying:
+Then open:
 
-- `packages/contracts/deployments/project-token.sepolia.example.json`
+/dashboard/[workspaceSlug]/projects/[projectSlug]/token-launch
 
-Then run:
+This route should now show:
 
-    pnpm contracts:deploy:project-token -- --config packages/contracts/deployments/project-token.sepolia.example.json
-
-The script should:
-
-- deploy `ProjectToken` to Sepolia
-- verify the contract on Etherscan
-- write the verified deployment into `project_contracts`
-- write token-specific metadata into `project_token_deployments`
-
-## Validate the admin app surface
-
-After a successful deployment, open:
-
-- `/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts`
-
-The new token should appear there immediately with:
-
-- generic contract registry data
-- token name and symbol
-- cap and initial supply
-- deployment transaction hash
-- deployer address
-- verification link
+- retry counts and retry limits
+- next retry timestamps for scheduled retries
+- heartbeat and worker details while active
+- terminal failure details
+- a retry button for failed launches
+- normalized retry and recovery activity in the project feed

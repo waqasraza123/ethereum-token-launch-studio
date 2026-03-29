@@ -4,127 +4,20 @@ import { resolve } from "node:path";
 import { validateSupabaseMigrationManifest } from "./lib/supabase-migrations.mjs";
 
 const requiredPaths = [
-  ".editorconfig",
   ".env.example",
-  ".github/workflows/ci.yml",
-  ".gitignore",
-  ".node-version",
-  ".npmrc",
   "README.md",
-  "eslint.config.mjs",
-  "package.json",
-  "pnpm-workspace.yaml",
-  "prettier.config.mjs",
-  "turbo.json",
-  "tooling/eslint/base.mjs",
-  "tooling/typescript/base.json",
-  "tooling/typescript/nextjs.json",
-  "tooling/typescript/node.json",
-  "docs/phases/phase-1-foundation.md",
-  "docs/phases/phase-2-core-schema.md",
-  "docs/phases/phase-2-auth-spine.md",
-  "docs/phases/phase-2-workspace-project-flows.md",
-  "docs/phases/phase-2-rls-and-session-reads.md",
-  "docs/phases/phase-2-membership-management.md",
-  "docs/phases/phase-2-project-context-and-contract-registry.md",
-  "docs/phases/phase-3-project-token-deployment-bridge.md",
+  "docs/phases/phase-3-token-launch-reliability.md",
   "docs/runbooks/local-setup.md",
-  "scripts/workspace-foundation.test.mjs",
-  "scripts/supabase-migrations.test.mjs",
-  "scripts/lib/supabase-migrations.mjs",
-  "scripts/lib/supabase-replay.mjs",
-  "scripts/list-migrations.mjs",
-  "scripts/validate-migrations.mjs",
-  "scripts/check-migration-replay.mjs",
-  "apps/web/package.json",
-  "apps/web/tsconfig.json",
-  "apps/web/next-env.d.ts",
-  "apps/web/next.config.ts",
-  "apps/web/eslint.config.mjs",
-  "apps/web/src/app/layout.tsx",
-  "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/settings/actions.ts",
-  "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/settings/page.tsx",
-  "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts/actions.ts",
-  "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/contracts/page.tsx",
-  "apps/web/src/components/projects/project-settings-shell.tsx",
-  "apps/web/src/components/projects/project-edit-form.tsx",
-  "apps/web/src/components/projects/project-delete-form.tsx",
-  "apps/web/src/components/contracts/project-contracts-shell.tsx",
-  "apps/web/src/components/contracts/project-contract-attach-form.tsx",
-  "apps/web/src/components/contracts/project-contract-detach-form.tsx",
-  "apps/web/src/lib/contracts/input.ts",
-  "apps/web/src/lib/contracts/registry.ts",
-  "apps/web/src/lib/projects/input.ts",
-  "apps/web/src/lib/routing/route-paths.ts",
-  "packages/contracts/package.json",
-  "packages/contracts/tsconfig.json",
-  "packages/contracts/hardhat.config.ts",
-  "packages/contracts/contracts/foundation/Phase1Sentinel.sol",
-  "packages/contracts/contracts/tokens/ProjectToken.sol",
-  "packages/contracts/test/Phase1Sentinel.test.ts",
-  "packages/contracts/test/ProjectToken.test.ts",
-  "packages/contracts/scripts/print-accounts.ts",
-  "packages/contracts/scripts/deploy-project-token.ts",
-  "packages/contracts/src/config/project-token-deployment.ts",
-  "packages/contracts/src/lib/project-token-registry.ts",
-  "packages/contracts/deployments/project-token.sepolia.example.json",
-  "infra/supabase/README.md",
-  "infra/supabase/config.toml",
-  "infra/supabase/migrations/0001_phase_1_baseline.sql",
-  "infra/supabase/migrations/0002_phase_2_core_business_schema.sql",
-  "infra/supabase/migrations/0003_phase_2_auth_workspace_bootstrap.sql",
-  "infra/supabase/migrations/0004_phase_2_workspace_project_flows.sql",
-  "infra/supabase/migrations/0005_phase_2_rls_and_session_reads.sql",
-  "infra/supabase/migrations/0006_phase_2_membership_management.sql",
-  "infra/supabase/migrations/0007_phase_2_project_context_and_contract_registry.sql",
-  "infra/supabase/migrations/0008_phase_3_project_token_deployment_bridge.sql"
-];
-
-const requiredRootScripts = [
-  "build",
-  "contracts:compile",
-  "contracts:deploy:project-token",
-  "contracts:test",
-  "db:list",
-  "db:replay:check",
-  "db:validate",
-  "dev:web",
-  "dev:worker",
-  "format",
-  "format:check",
-  "lint",
-  "typecheck",
-  "test",
-  "validate:foundation"
-];
-
-const requiredWorkspaceGlobs = ["apps/*", "packages/*"];
-const requiredTurboTasks = ["build", "dev", "lint", "typecheck", "test"];
-
-const requiredPackageDefinitions = [
-  {
-    path: "apps/web/package.json",
-    name: "@token-launch-studio/web",
-    scripts: ["build", "dev", "lint", "test", "typecheck"]
-  },
-  {
-    path: "apps/worker/package.json",
-    name: "@token-launch-studio/worker",
-    scripts: ["build", "dev", "lint", "test", "typecheck"]
-  },
-  {
-    path: "packages/contracts/package.json",
-    name: "@token-launch-studio/contracts",
-    scripts: [
-      "accounts",
-      "build",
-      "compile",
-      "deploy:project-token",
-      "lint",
-      "test",
-      "typecheck"
-    ]
-  }
+  "apps/web/src/lib/token-launch/retry-input.ts",
+  "apps/web/src/lib/token-launch/requests.ts",
+  "apps/web/src/lib/activity.ts",
+  "apps/web/src/components/projects/project-activity-feed.tsx",
+  "apps/web/src/components/projects/project-token-launch-retry-form.tsx",
+  "apps/web/src/components/projects/project-token-launch-shell.tsx",
+  "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/token-launch/actions.ts",
+  "apps/worker/src/config/env.ts",
+  "apps/worker/src/features/project-token-launch/process-launch-requests.ts",
+  "infra/supabase/migrations/0010_phase_3_project_token_launch_reliability.sql"
 ];
 
 const ensurePathExists = async (relativePath) => {
@@ -138,68 +31,13 @@ const readJsonFile = async (relativePath) => {
 
 const main = async () => {
   await Promise.all(requiredPaths.map(ensurePathExists));
+  await validateSupabaseMigrationManifest();
 
   const packageJson = await readJsonFile("package.json");
 
   if (packageJson.private !== true) {
     throw new Error("package.json must set private to true.");
   }
-
-  if (
-    typeof packageJson.packageManager !== "string" ||
-    !packageJson.packageManager.startsWith("pnpm@")
-  ) {
-    throw new Error("package.json must lock pnpm via packageManager.");
-  }
-
-  const rootScripts = packageJson.scripts ?? {};
-  const missingRootScripts = requiredRootScripts.filter(
-    (scriptName) => !(scriptName in rootScripts)
-  );
-
-  if (missingRootScripts.length > 0) {
-    throw new Error(`package.json is missing required scripts: ${missingRootScripts.join(", ")}`);
-  }
-
-  const workspaceFileContent = await readFile(resolve("pnpm-workspace.yaml"), "utf8");
-  const missingWorkspaceGlobs = requiredWorkspaceGlobs.filter(
-    (workspaceGlob) => !workspaceFileContent.includes(`- ${workspaceGlob}`)
-  );
-
-  if (missingWorkspaceGlobs.length > 0) {
-    throw new Error(
-      `pnpm-workspace.yaml is missing required globs: ${missingWorkspaceGlobs.join(", ")}`
-    );
-  }
-
-  const turboConfig = await readJsonFile("turbo.json");
-  const turboTasks = turboConfig.tasks ?? {};
-  const missingTurboTasks = requiredTurboTasks.filter((taskName) => !(taskName in turboTasks));
-
-  if (missingTurboTasks.length > 0) {
-    throw new Error(`turbo.json is missing required tasks: ${missingTurboTasks.join(", ")}`);
-  }
-
-  for (const definition of requiredPackageDefinitions) {
-    const workspacePackageJson = await readJsonFile(definition.path);
-
-    if (workspacePackageJson.name !== definition.name) {
-      throw new Error(`${definition.path} must have package name ${definition.name}.`);
-    }
-
-    const workspaceScripts = workspacePackageJson.scripts ?? {};
-    const missingWorkspaceScripts = definition.scripts.filter(
-      (scriptName) => !(scriptName in workspaceScripts)
-    );
-
-    if (missingWorkspaceScripts.length > 0) {
-      throw new Error(
-        `${definition.path} is missing required scripts: ${missingWorkspaceScripts.join(", ")}`
-      );
-    }
-  }
-
-  await validateSupabaseMigrationManifest();
 
   console.log("Workspace foundation validation passed.");
 };

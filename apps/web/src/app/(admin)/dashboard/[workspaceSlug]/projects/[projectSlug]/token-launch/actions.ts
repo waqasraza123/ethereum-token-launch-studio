@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireCurrentUser } from "@/lib/auth/session";
 import { getProjectBySlug } from "@/lib/projects/data";
+import { parseProjectTokenLaunchRequestFormData } from "@/lib/token-launch/input";
+import { parseProjectTokenLaunchRetryFormData } from "@/lib/token-launch/retry-input";
 import {
   getWorkspaceDashboardPath,
   getWorkspaceProjectPath,
@@ -12,7 +14,6 @@ import {
   routePaths
 } from "@/lib/routing/route-paths";
 import { createServerAppSupabaseClient } from "@/lib/supabase/server-app";
-import { parseProjectTokenLaunchRequestFormData } from "@/lib/token-launch/input";
 import {
   canCreateProjectsForRole,
   getWorkspaceAccessBySlug
@@ -27,6 +28,11 @@ const buildLaunchErrorRedirect = (
     workspaceSlug,
     currentProjectSlug
   )}?error=${encodeURIComponent(message)}`;
+
+const revalidateLaunchPaths = (workspaceSlug: string, currentProjectSlug: string) => {
+  revalidatePath(getWorkspaceProjectPath(workspaceSlug, currentProjectSlug));
+  revalidatePath(getWorkspaceProjectTokenLaunchPath(workspaceSlug, currentProjectSlug));
+};
 
 export const createProjectTokenLaunchRequestAction = async (
   formData: FormData
@@ -104,6 +110,16 @@ export const createProjectTokenLaunchRequestAction = async (
   });
 
   if (error) {
+    if (error.code === "23505") {
+      redirect(
+        buildLaunchErrorRedirect(
+          parsedInput.workspaceSlug,
+          parsedInput.currentProjectSlug,
+          "An active token launch request already exists for this project."
+        )
+      );
+    }
+
     if (error.code === "42501") {
       redirect(
         buildLaunchErrorRedirect(
@@ -123,18 +139,127 @@ export const createProjectTokenLaunchRequestAction = async (
     );
   }
 
-  revalidatePath(getWorkspaceProjectPath(parsedInput.workspaceSlug, parsedInput.currentProjectSlug));
-  revalidatePath(
-    getWorkspaceProjectTokenLaunchPath(
-      parsedInput.workspaceSlug,
-      parsedInput.currentProjectSlug
-    )
-  );
+  revalidateLaunchPaths(parsedInput.workspaceSlug, parsedInput.currentProjectSlug);
 
   redirect(
     `${getWorkspaceProjectTokenLaunchPath(
       parsedInput.workspaceSlug,
       parsedInput.currentProjectSlug
     )}?queued=1`
+  );
+};
+
+export const retryProjectTokenLaunchRequestAction = async (
+  formData: FormData
+): Promise<void> => {
+  await requireCurrentUser();
+
+  let parsedInput;
+
+  try {
+    parsedInput = parseProjectTokenLaunchRetryFormData(formData);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const workspaceSlug =
+        typeof formData.get("workspaceSlug") === "string"
+          ? String(formData.get("workspaceSlug"))
+          : "";
+      const currentProjectSlug =
+        typeof formData.get("currentProjectSlug") === "string"
+          ? String(formData.get("currentProjectSlug"))
+          : "";
+
+      if (workspaceSlug !== "" && currentProjectSlug !== "") {
+        redirect(
+          buildLaunchErrorRedirect(
+            workspaceSlug,
+            currentProjectSlug,
+            "Enter a valid launch retry request."
+          )
+        );
+      }
+
+      redirect(routePaths.dashboard);
+    }
+
+    throw error;
+  }
+
+  const workspaceAccess = await getWorkspaceAccessBySlug(parsedInput.workspaceSlug);
+
+  if (!workspaceAccess) {
+    redirect(routePaths.dashboard);
+  }
+
+  if (!canCreateProjectsForRole(workspaceAccess.role)) {
+    redirect(
+      `${getWorkspaceDashboardPath(parsedInput.workspaceSlug)}?error=${encodeURIComponent(
+        "Your current role cannot retry token launches in this workspace."
+      )}`
+    );
+  }
+
+  const project = await getProjectBySlug(
+    workspaceAccess.workspace.id,
+    parsedInput.currentProjectSlug
+  );
+
+  if (!project) {
+    redirect(getWorkspaceDashboardPath(parsedInput.workspaceSlug));
+  }
+
+  const supabase = await createServerAppSupabaseClient();
+
+  const { error } = await supabase.rpc("retry_failed_project_token_launch_request", {
+    p_request_id: parsedInput.requestId
+  });
+
+  if (error) {
+    if (error.code === "22023") {
+      redirect(
+        buildLaunchErrorRedirect(
+          parsedInput.workspaceSlug,
+          parsedInput.currentProjectSlug,
+          "Only terminal failed launch requests can be retried."
+        )
+      );
+    }
+
+    if (error.code === "23505") {
+      redirect(
+        buildLaunchErrorRedirect(
+          parsedInput.workspaceSlug,
+          parsedInput.currentProjectSlug,
+          "An active token launch request already exists for this project."
+        )
+      );
+    }
+
+    if (error.code === "42501") {
+      redirect(
+        buildLaunchErrorRedirect(
+          parsedInput.workspaceSlug,
+          parsedInput.currentProjectSlug,
+          "Your current role cannot retry token launches in this workspace."
+        )
+      );
+    }
+
+    redirect(
+      buildLaunchErrorRedirect(
+        parsedInput.workspaceSlug,
+        parsedInput.currentProjectSlug,
+        "Could not retry the failed token launch right now."
+      )
+    );
+  }
+
+  revalidateLaunchPaths(parsedInput.workspaceSlug, parsedInput.currentProjectSlug);
+
+  redirect(
+    `${getWorkspaceProjectTokenLaunchPath(
+      parsedInput.workspaceSlug,
+      parsedInput.currentProjectSlug
+    )}?retried=1`
   );
 };

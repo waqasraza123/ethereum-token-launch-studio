@@ -1,6 +1,6 @@
 # Ethereum Token Launch Studio
 
-Ethereum Token Launch Studio is a reusable token operations platform for Ethereum projects. The long-term product scope includes token deployment, sale rounds, allowlists, claims, vesting, treasury workflows, analytics, and operational tooling.
+Ethereum Token Launch Studio is a reusable token operations platform for Ethereum projects. The long term product scope includes token deployment, sale rounds, allowlists, claims, vesting, treasury workflows, analytics, and operational tooling.
 
 ## Current scope
 
@@ -11,50 +11,25 @@ This repo currently includes:
 - a bootable Node worker shell
 - a bootable Hardhat 3 contracts workspace
 - a replayable Supabase infra boundary
-- a core Phase 2 business schema for workspaces, workspace members, and projects
-- a server-side auth/data spine for sign-in and workspace bootstrap
 - protected workspace and project routes
-- database-side authorization hardening and session-backed admin reads
-- owner-only workspace membership management
-- protected project editing and deletion
-- the first project-to-contract registry attachment flow
-- a real Sepolia project token deployment bridge into the registry
-- shared TypeScript and ESLint tooling
-- phase and architecture docs
-
-This repo does not yet include deployment automation for non-token contract kinds, token sale logic, claim logic, or admin-side launch-job orchestration.
+- owner aware workspace membership management
+- project contract registry
+- verified Sepolia token deployment bridge
+- worker driven token launch workflow
+- retry rules stale job recovery failure visibility and manual retry for token launches
 
 ## Install
 
-    pnpm install
+pnpm install
 
-## Database verification
+## Verification
 
-    pnpm db:list
-    pnpm db:validate
-    pnpm db:replay:check
-
-## Contracts verification
-
-    pnpm contracts:compile
-    pnpm contracts:test
-
-## Web verification
-
-    pnpm --filter @token-launch-studio/web lint
-    pnpm --filter @token-launch-studio/web typecheck
-    pnpm --filter @token-launch-studio/web test
-    pnpm --filter @token-launch-studio/web build
-
-## Full repo verification
-
-    pnpm format:check
-    pnpm lint
-    pnpm typecheck
-    pnpm test
-    pnpm contracts:compile
-    pnpm contracts:test
-    pnpm db:validate
-    pnpm db:replay:check
-    pnpm build
-    pnpm validate:foundation
+pnpm contracts:compile
+pnpm contracts:test
+pnpm db:list
+pnpm db:validate
+pnpm db:replay:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
