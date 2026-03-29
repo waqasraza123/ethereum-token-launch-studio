@@ -16,7 +16,7 @@ const firstUserId = "00000000-0000-0000-0000-000000000001";
 const secondUserId = "00000000-0000-0000-0000-000000000002";
 const thirdUserId = "00000000-0000-0000-0000-000000000003";
 
-test("supabase migration manifest is sequential and includes the launch reliability migration", async () => {
+test("supabase migration manifest is sequential and includes the live visibility and cancel migration", async () => {
   const manifest = await validateSupabaseMigrationManifest();
 
   assert.deepEqual(
@@ -31,7 +31,8 @@ test("supabase migration manifest is sequential and includes the launch reliabil
       "0007_phase_2_project_context_and_contract_registry.sql",
       "0008_phase_3_project_token_deployment_bridge.sql",
       "0009_phase_3_project_token_launch_workflow.sql",
-      "0010_phase_3_project_token_launch_reliability.sql"
+      "0010_phase_3_project_token_launch_reliability.sql",
+      "0011_phase_3_token_launch_live_visibility_and_cancel.sql"
     ]
   );
 });
@@ -56,6 +57,21 @@ test("launch reliability migration defines retry stale recovery heartbeat and ma
     reliabilityMigration.statementText,
     /project_token_launch_retry_scheduled/i
   );
+});
+
+test("live visibility and cancel migration defines the cancel function and start outcome", async () => {
+  const manifest = await readSupabaseMigrationManifest();
+  const cancelMigration = manifest[10];
+
+  assert.match(
+    cancelMigration.statementText,
+    /create or replace function app_public\.cancel_project_token_launch_request/i
+  );
+  assert.match(
+    cancelMigration.statementText,
+    /create or replace function app_public\.mark_project_token_launch_request_started/i
+  );
+  assert.match(cancelMigration.statementText, /project_token_launch_cancelled/i);
 });
 
 test("failure schedules retry and terminal failure can be retried manually by an authorized operator", async () => {
@@ -115,7 +131,8 @@ test("failure schedules retry and terminal failure can be retried manually by an
     `);
 
     await database.query(`
-      select app_public.mark_project_token_launch_request_started(
+      select *
+      from app_public.mark_project_token_launch_request_started(
         '50000000-0000-0000-0000-000000000001',
         'worker-1'
       )
@@ -143,7 +160,8 @@ test("failure schedules retry and terminal failure can be retried manually by an
     `);
 
     await database.query(`
-      select app_public.mark_project_token_launch_request_started(
+      select *
+      from app_public.mark_project_token_launch_request_started(
         '50000000-0000-0000-0000-000000000001',
         'worker-2'
       )
@@ -171,7 +189,8 @@ test("failure schedules retry and terminal failure can be retried manually by an
     `);
 
     await database.query(`
-      select app_public.mark_project_token_launch_request_started(
+      select *
+      from app_public.mark_project_token_launch_request_started(
         '50000000-0000-0000-0000-000000000001',
         'worker-3'
       )
@@ -301,7 +320,175 @@ test("stale claimed or deploying requests are recovered and rescheduled or faile
   }
 });
 
-test("authorized project members can see retry state and activity while outsiders cannot", async () => {
+test("authorized operator can cancel a claimed launch before deployment starts", async () => {
+  const { database } = await replaySupabaseMigrations();
+
+  try {
+    await database.exec(`
+      insert into auth.users (id, email)
+      values ('${firstUserId}', 'owner@example.com');
+    `);
+
+    await setReplayAuthenticatedUser(database, firstUserId);
+
+    await database.query(`
+      select *
+      from app_public.bootstrap_workspace(
+        '10000000-0000-0000-0000-000000000001',
+        'studio-core',
+        'Studio Core',
+        '20000000-0000-0000-0000-000000000001'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.create_project(
+        '30000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-000000000001',
+        'alpha-launch',
+        'Alpha Launch',
+        'Initial project'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.create_project_token_launch_request(
+        '50000000-0000-0000-0000-000000000001',
+        '30000000-0000-0000-0000-000000000001',
+        'Alpha Token',
+        'Alpha Token',
+        'ALPHA',
+        1000000000000000000000000,
+        250000000000000000000000,
+        '0x1111111111111111111111111111111111111111',
+        '0x1111111111111111111111111111111111111111',
+        null,
+        'Initial launch request'
+      )
+    `);
+
+    await setReplayServiceRole(database);
+
+    await database.query(`
+      select *
+      from app_public.claim_next_project_token_launch_request('worker-1')
+    `);
+
+    await setReplayAuthenticatedUser(database, firstUserId);
+
+    const cancelResult = await database.query(`
+      select *
+      from app_public.cancel_project_token_launch_request(
+        '50000000-0000-0000-0000-000000000001'
+      )
+    `);
+
+    await setReplayServiceRole(database);
+
+    const startOutcome = await database.query(`
+      select *
+      from app_public.mark_project_token_launch_request_started(
+        '50000000-0000-0000-0000-000000000001',
+        'worker-1'
+      )
+    `);
+
+    assert.deepEqual(cancelResult.rows[0], {
+      project_id: "30000000-0000-0000-0000-000000000001",
+      request_id: "50000000-0000-0000-0000-000000000001",
+      status: "cancelled"
+    });
+
+    assert.deepEqual(startOutcome.rows[0], {
+      project_id: "30000000-0000-0000-0000-000000000001",
+      start_status: "cancelled"
+    });
+  } finally {
+    await resetReplaySession(database);
+    await closeSupabaseReplayDatabase(database);
+  }
+});
+
+test("non-operators cannot cancel token launches", async () => {
+  const { database } = await replaySupabaseMigrations();
+
+  try {
+    await database.exec(`
+      insert into auth.users (id, email)
+      values
+        ('${firstUserId}', 'owner@example.com'),
+        ('${secondUserId}', 'viewer@example.com');
+    `);
+
+    await setReplayAuthenticatedUser(database, firstUserId);
+
+    await database.query(`
+      select *
+      from app_public.bootstrap_workspace(
+        '10000000-0000-0000-0000-000000000001',
+        'studio-core',
+        'Studio Core',
+        '20000000-0000-0000-0000-000000000001'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.create_project(
+        '30000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-000000000001',
+        'alpha-launch',
+        'Alpha Launch',
+        'Initial project'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.invite_workspace_member(
+        '10000000-0000-0000-0000-000000000001',
+        '20000000-0000-0000-0000-000000000002',
+        'viewer@example.com',
+        'viewer'
+      )
+    `);
+
+    await database.query(`
+      select *
+      from app_public.create_project_token_launch_request(
+        '50000000-0000-0000-0000-000000000001',
+        '30000000-0000-0000-0000-000000000001',
+        'Alpha Token',
+        'Alpha Token',
+        'ALPHA',
+        1000000000000000000000000,
+        250000000000000000000000,
+        '0x1111111111111111111111111111111111111111',
+        '0x1111111111111111111111111111111111111111',
+        null,
+        'Initial launch request'
+      )
+    `);
+
+    await setReplayAuthenticatedUser(database, secondUserId);
+
+    await assert.rejects(
+      database.query(`
+        select *
+        from app_public.cancel_project_token_launch_request(
+          '50000000-0000-0000-0000-000000000001'
+        )
+      `)
+    );
+  } finally {
+    await resetReplaySession(database);
+    await closeSupabaseReplayDatabase(database);
+  }
+});
+
+test("authorized project members can still see launch rows and activity after cancellation while outsiders cannot", async () => {
   const { database } = await replaySupabaseMigrations();
 
   try {
@@ -363,6 +550,13 @@ test("authorized project members can see retry state and activity while outsider
       )
     `);
 
+    await database.query(`
+      select *
+      from app_public.cancel_project_token_launch_request(
+        '50000000-0000-0000-0000-000000000001'
+      )
+    `);
+
     await setReplayAuthenticatedUser(database, secondUserId);
 
     const viewerCounts = await database.query(`
@@ -380,7 +574,7 @@ test("authorized project members can see retry state and activity while outsider
     `);
 
     assert.deepEqual(viewerCounts.rows[0], {
-      activity_count: 1,
+      activity_count: 2,
       launch_request_count: 1
     });
 

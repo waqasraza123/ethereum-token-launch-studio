@@ -1,16 +1,21 @@
 import { createBrowserClient } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { getPublicWebEnvironment } from "@/lib/env/public";
 
-let cachedBrowserSupabaseClient: SupabaseClient | null = null;
+let browserClient:
+  | ReturnType<typeof createBrowserClient>
+  | null = null;
 
-export const createBrowserSupabaseClient = (): SupabaseClient => {
-  const environment = getPublicWebEnvironment();
+export const createBrowserSupabaseClient = () => {
+  if (browserClient) {
+    return browserClient;
+  }
 
-  cachedBrowserSupabaseClient ??= createBrowserClient(
-    environment.NEXT_PUBLIC_SUPABASE_URL,
-    environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  return cachedBrowserSupabaseClient;
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error("Supabase browser environment is not configured.");
+  }
+
+  browserClient = createBrowserClient(supabaseUrl, supabasePublishableKey);
+  return browserClient;
 };

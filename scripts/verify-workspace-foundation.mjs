@@ -7,17 +7,25 @@ const requiredPaths = [
   ".env.example",
   "README.md",
   "docs/phases/phase-3-token-launch-reliability.md",
+  "docs/phases/phase-3-live-visibility-and-cancel.md",
   "docs/runbooks/local-setup.md",
   "apps/web/src/lib/token-launch/retry-input.ts",
+  "apps/web/src/lib/token-launch/cancel-input.ts",
   "apps/web/src/lib/token-launch/requests.ts",
+  "apps/web/src/lib/token-launch/workers.ts",
   "apps/web/src/lib/activity.ts",
+  "apps/web/src/lib/supabase/browser.ts",
   "apps/web/src/components/projects/project-activity-feed.tsx",
   "apps/web/src/components/projects/project-token-launch-retry-form.tsx",
+  "apps/web/src/components/projects/project-token-launch-cancel-form.tsx",
+  "apps/web/src/components/projects/project-token-launch-live-updates.tsx",
+  "apps/web/src/components/projects/project-token-launch-worker-panel.tsx",
   "apps/web/src/components/projects/project-token-launch-shell.tsx",
   "apps/web/src/app/(admin)/dashboard/[workspaceSlug]/projects/[projectSlug]/token-launch/actions.ts",
   "apps/worker/src/config/env.ts",
   "apps/worker/src/features/project-token-launch/process-launch-requests.ts",
-  "infra/supabase/migrations/0010_phase_3_project_token_launch_reliability.sql"
+  "infra/supabase/migrations/0010_phase_3_project_token_launch_reliability.sql",
+  "infra/supabase/migrations/0011_phase_3_token_launch_live_visibility_and_cancel.sql"
 ];
 
 const ensurePathExists = async (relativePath) => {

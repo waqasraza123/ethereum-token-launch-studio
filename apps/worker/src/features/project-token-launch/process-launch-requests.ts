@@ -33,8 +33,29 @@ const DeploymentScriptResultSchema = z.object({
   verificationUrl: z.string().url()
 });
 
+const FailureOutcomeSchema = z.object({
+  next_retry_at: z.union([z.string(), z.null()]),
+  retry_count: z.number(),
+  status: z.string()
+});
+
+const RecoveryOutcomeSchema = z.object({
+  next_retry_at: z.union([z.string(), z.null()]),
+  request_id: z.string().uuid(),
+  retry_count: z.number(),
+  status: z.string()
+});
+
+const StartedOutcomeSchema = z.object({
+  project_id: z.string().uuid(),
+  start_status: z.enum(["started", "cancelled"])
+});
+
 type ClaimedLaunchRequest = Readonly<z.infer<typeof ClaimedLaunchRequestSchema>>;
 type DeploymentScriptResult = Readonly<z.infer<typeof DeploymentScriptResultSchema>>;
+type FailureOutcome = Readonly<z.infer<typeof FailureOutcomeSchema>>;
+type RecoveryOutcome = Readonly<z.infer<typeof RecoveryOutcomeSchema>>;
+type StartedOutcome = Readonly<z.infer<typeof StartedOutcomeSchema>>;
 
 const repoRoot = resolve(fileURLToPath(new URL("../../../../../", import.meta.url)));
 
@@ -151,14 +172,33 @@ export const startProjectTokenLaunchProcessor = async (
     return ClaimedLaunchRequestSchema.parse(row);
   };
 
-  const markStarted = async (requestId: string) => {
-    const { error } = await supabase.rpc("mark_project_token_launch_request_started", {
+  const markStarted = async (requestId: string): Promise<StartedOutcome> => {
+    const { data, error } = await supabase.rpc("mark_project_token_launch_request_started", {
       p_request_id: requestId,
       p_worker_id: workerId
     });
 
     if (error) {
       throw new Error(`Could not mark the launch request as started: ${error.message}`);
+    }
+
+    const row = (data as readonly unknown[] | null)?.[0];
+
+    if (!row) {
+      throw new Error("Launch request start outcome was not returned.");
+    }
+
+    return StartedOutcomeSchema.parse(row);
+  };
+
+  const touchHeartbeat = async (requestId: string) => {
+    const { error } = await supabase.rpc("touch_project_token_launch_request_heartbeat", {
+      p_request_id: requestId,
+      p_worker_id: workerId
+    });
+
+    if (error) {
+      throw new Error(`Could not update the launch request heartbeat: ${error.message}`);
     }
   };
 
@@ -180,8 +220,11 @@ export const startProjectTokenLaunchProcessor = async (
     }
   };
 
-  const markFailed = async (requestId: string, failureMessage: string) => {
-    const { error } = await supabase.rpc("mark_project_token_launch_request_failed", {
+  const markFailed = async (
+    requestId: string,
+    failureMessage: string
+  ): Promise<FailureOutcome> => {
+    const { data, error } = await supabase.rpc("mark_project_token_launch_request_failed", {
       p_request_id: requestId,
       p_worker_id: workerId,
       p_failure_message: failureMessage
@@ -189,6 +232,54 @@ export const startProjectTokenLaunchProcessor = async (
 
     if (error) {
       throw new Error(`Could not mark the launch request as failed: ${error.message}`);
+    }
+
+    const row = (data as readonly unknown[] | null)?.[0];
+
+    if (!row) {
+      throw new Error("Launch failure outcome was not returned.");
+    }
+
+    return FailureOutcomeSchema.parse(row);
+  };
+
+  const recoverStaleRequests = async (): Promise<readonly RecoveryOutcome[]> => {
+    const staleBefore = new Date(Date.now() - environment.TOKEN_LAUNCH_STALE_AFTER_MS).toISOString();
+
+    const { data, error } = await supabase.rpc("recover_stale_project_token_launch_requests", {
+      p_recovered_by_worker_id: workerId,
+      p_stale_before: staleBefore
+    });
+
+    if (error) {
+      throw new Error(`Could not recover stale project token launch requests: ${error.message}`);
+    }
+
+    return ((data ?? []) as readonly unknown[]).map((row) =>
+      RecoveryOutcomeSchema.parse(row)
+    );
+  };
+
+  const withHeartbeat = async <T,>(
+    requestId: string,
+    task: () => Promise<T>
+  ): Promise<T> => {
+    await touchHeartbeat(requestId);
+
+    const heartbeat = setInterval(() => {
+      void touchHeartbeat(requestId).catch((error) => {
+        console.error("project_token_launch_request.heartbeat_failed", {
+          error: error instanceof Error ? error.message : String(error),
+          requestId,
+          workerId
+        });
+      });
+    }, environment.TOKEN_LAUNCH_HEARTBEAT_INTERVAL_MS);
+
+    try {
+      return await task();
+    } finally {
+      clearInterval(heartbeat);
     }
   };
 
@@ -200,8 +291,21 @@ export const startProjectTokenLaunchProcessor = async (
     }
 
     try {
-      await markStarted(request.request_id);
-      const result = await runDeploymentCommand(request);
+      const startedOutcome = await markStarted(request.request_id);
+
+      if (startedOutcome.start_status === "cancelled") {
+        console.info("project_token_launch_request.cancelled_before_start", {
+          requestId: request.request_id,
+          workerId
+        });
+
+        return true;
+      }
+
+      const result = await withHeartbeat(request.request_id, async () =>
+        await runDeploymentCommand(request)
+      );
+
       await markSucceeded(request.request_id, result);
 
       console.info("project_token_launch_request.succeeded", {
@@ -213,11 +317,15 @@ export const startProjectTokenLaunchProcessor = async (
     } catch (error) {
       const failureMessage =
         error instanceof Error ? error.message : "Project token launch failed.";
-      await markFailed(request.request_id, failureMessage);
+
+      const failureOutcome = await markFailed(request.request_id, failureMessage);
 
       console.error("project_token_launch_request.failed", {
         failureMessage,
+        nextRetryAt: failureOutcome.next_retry_at,
         requestId: request.request_id,
+        retryCount: failureOutcome.retry_count,
+        status: failureOutcome.status,
         workerId
       });
     }
@@ -233,6 +341,15 @@ export const startProjectTokenLaunchProcessor = async (
     running = true;
 
     try {
+      const recoveredRequests = await recoverStaleRequests();
+
+      if (recoveredRequests.length > 0) {
+        console.warn("project_token_launch_request.recovered", {
+          recoveredRequests,
+          workerId
+        });
+      }
+
       while (true) {
         const processed = await processOne();
 

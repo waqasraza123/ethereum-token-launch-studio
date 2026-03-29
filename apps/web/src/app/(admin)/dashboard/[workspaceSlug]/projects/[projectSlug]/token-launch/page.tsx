@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
-import { ProjectTokenLaunchShell } from "@/components/projects/project-token-launch-shell";
 import { listProjectActivities } from "@/lib/activity";
 import { requireCurrentUser } from "@/lib/auth/session";
 import { getProjectBySlug } from "@/lib/projects/data";
 import { listProjectTokenLaunchRequests } from "@/lib/token-launch/requests";
+import { deriveProjectTokenLaunchWorkerStatuses } from "@/lib/token-launch/workers";
 import { getWorkspaceAccessBySlug } from "@/lib/workspaces/access";
+import { ProjectTokenLaunchShell } from "@/components/projects/project-token-launch-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -54,12 +55,20 @@ export default async function ProjectTokenLaunchPage({
 
   const requests = await listProjectTokenLaunchRequests(project.id);
   const activities = await listProjectActivities(project.id, 25);
+  const workerStatuses = deriveProjectTokenLaunchWorkerStatuses(
+    requests,
+    Number(process.env.TOKEN_LAUNCH_STALE_AFTER_MS ?? "1800000")
+  );
 
   const errorMessage = readSingleSearchParam(resolvedSearchParams, "error");
   const statusMessage =
     readSingleSearchParam(resolvedSearchParams, "queued") === "1"
       ? "Project token launch request queued successfully."
-      : null;
+      : readSingleSearchParam(resolvedSearchParams, "retried") === "1"
+        ? "Failed project token launch request retried successfully."
+        : readSingleSearchParam(resolvedSearchParams, "cancelled") === "1"
+          ? "Project token launch request cancelled successfully."
+          : null;
 
   return (
     <ProjectTokenLaunchShell
@@ -68,6 +77,7 @@ export default async function ProjectTokenLaunchPage({
       project={project}
       requests={requests}
       statusMessage={statusMessage}
+      workerStatuses={workerStatuses}
       workspaceAccess={workspaceAccess}
     />
   );
